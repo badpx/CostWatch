@@ -1,0 +1,33 @@
+[package]
+name = "tokenwatch"
+version = "0.1.0"
+description = "macOS menu bar app for monitoring LLM API usage"
+authors = ["you"]
+edition = "2021"
+
+[lib]
+name = "tokenwatch_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-opener = "2"
+tauri-plugin-shell = "2"
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+serde_json_path = "0.7"
+rust_decimal = "1"
+rust_decimal_macros = "1"
+reqwest = { version = "0.12", features = ["json"] }
+tokio = { version = "1", features = ["full"] }
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "6"
+thiserror = "2"
+
+[profile.dev.package.scrypt]
+opt-level = 3
