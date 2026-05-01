@@ -2,6 +2,7 @@ use crate::provider::fetcher;
 use crate::provider::plugin;
 use crate::provider::types::*;
 use crate::state::AppState;
+use tauri::Emitter;
 
 #[tauri::command]
 pub async fn get_providers(state: tauri::State<'_, AppState>) -> Result<Vec<ProviderState>, String> {
@@ -170,10 +171,12 @@ pub async fn get_settings(state: tauri::State<'_, AppState>) -> Result<GeneralSe
 
 #[tauri::command]
 pub async fn save_settings(
+    app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
     settings: GeneralSettings,
 ) -> Result<(), String> {
     crate::storage::save_settings(&settings)?;
     *state.settings.lock().unwrap() = settings;
+    let _ = app.emit("settings-updated", ());
     Ok(())
 }

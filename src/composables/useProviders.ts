@@ -1,11 +1,9 @@
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
 import type { ProviderState } from "../types";
 
 const providers = ref<ProviderState[]>([]);
 let refreshInterval: ReturnType<typeof setInterval> | null = null;
-let unlisten: (() => void) | null = null;
 
 export function useProviders() {
   const loading = ref(false);
@@ -57,16 +55,6 @@ export function useProviders() {
       clearInterval(refreshInterval);
       refreshInterval = null;
     }
-    if (unlisten) {
-      unlisten();
-      unlisten = null;
-    }
-  }
-
-  async function listenRefreshEvent() {
-    unlisten = await listen("refresh-triggered", () => {
-      refreshAll();
-    });
   }
 
   return {
@@ -78,6 +66,5 @@ export function useProviders() {
     refreshProvider,
     startAutoRefresh,
     stopAutoRefresh,
-    listenRefreshEvent,
   };
 }

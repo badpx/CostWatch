@@ -45,6 +45,7 @@ import ProviderCard from "./ProviderCard.vue";
 import { useProviders } from "../composables/useProviders";
 import { useSettings } from "../composables/useSettings";
 import { getAllWebviewWindows } from "@tauri-apps/api/webviewWindow";
+import { listen } from "@tauri-apps/api/event";
 
 const {
   providers,
@@ -53,7 +54,6 @@ const {
   refreshProvider,
   startAutoRefresh,
   stopAutoRefresh,
-  listenRefreshEvent,
 } = useProviders();
 
 const { settings, loadSettings } = useSettings();
@@ -67,14 +67,24 @@ async function openSettings() {
   }
 }
 
+let unlistenSettings: (() => void) | null = null;
+
 onMounted(async () => {
   await loadSettings();
   startAutoRefresh(settings.value.refresh_interval_secs * 1000);
-  await listenRefreshEvent();
+
+  unlistenSettings = await listen("settings-updated", async () => {
+    await loadSettings();
+    startAutoRefresh(settings.value.refresh_interval_secs * 1000);
+  });
 });
 
 onUnmounted(() => {
   stopAutoRefresh();
+  if (unlistenSettings) {
+    unlistenSettings();
+    unlistenSettings = null;
+  }
 });
 </script>
 

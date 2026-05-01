@@ -8,7 +8,6 @@ use provider::plugin;
 use provider::registry::ProviderRegistry;
 use provider::types::{ProviderIcon, ProviderState, ProviderStatus};
 use state::AppState;
-use tauri::Emitter;
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -97,21 +96,6 @@ pub fn run() {
                     }
                 });
             }
-
-            let app_handle = app.handle().clone();
-            let interval_secs = settings.refresh_interval_secs;
-            std::thread::spawn(move || {
-                let runtime = tokio::runtime::Runtime::new().unwrap();
-                runtime.block_on(async {
-                    let mut interval = tokio::time::interval(
-                        std::time::Duration::from_secs(interval_secs)
-                    );
-                    loop {
-                        interval.tick().await;
-                        let _ = app_handle.emit("refresh-triggered", ());
-                    }
-                });
-            });
 
             Ok(())
         })
