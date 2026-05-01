@@ -6,9 +6,10 @@
       <label class="setting-label">刷新间隔</label>
       <select v-model="localSettings.refresh_interval_secs" class="setting-select">
         <option :value="30">30 秒</option>
-        <option :value="60">60 秒</option>
+        <option :value="60">1 分钟</option>
         <option :value="120">2 分钟</option>
         <option :value="300">5 分钟</option>
+        <option :value="600">10 分钟</option>
       </select>
     </div>
 
@@ -31,7 +32,7 @@ import { invoke } from "@tauri-apps/api/core";
 import type { GeneralSettings } from "../types";
 
 const localSettings = ref<GeneralSettings>({
-  refresh_interval_secs: 60,
+  refresh_interval_secs: 120,
   launch_at_login: false,
 });
 

@@ -27,7 +27,7 @@ import GeneralSettings from "./GeneralSettings.vue";
 const activeTab = ref("providers");
 
 const tabs = [
-  { id: "providers", label: "厂商配置" },
+  { id: "providers", label: "提供商配置" },
   { id: "plugins", label: "插件管理" },
   { id: "general", label: "通用" },
 ];

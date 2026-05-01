@@ -1,6 +1,6 @@
 <template>
   <div class="provider-config">
-    <h3 class="section-title">内置厂商</h3>
+    <h3 class="section-title">内置提供商</h3>
     <div
       v-for="provider in builtinProviders"
       :key="provider.id"

@@ -1,6 +1,6 @@
 <template>
   <div class="plugin-manager">
-    <h3 class="section-title">插件厂商</h3>
+    <h3 class="section-title">插件提供商</h3>
 
     <div
       v-for="provider in pluginProviders"
@@ -19,7 +19,7 @@
     </div>
 
     <div v-if="pluginProviders.length === 0" class="empty-state">
-      <p>暂无插件厂商</p>
+      <p>暂无插件提供商</p>
     </div>
 
     <div class="import-section">

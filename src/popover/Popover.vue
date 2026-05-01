@@ -23,7 +23,7 @@
       />
 
       <div v-if="providers.length === 0" class="empty-state">
-        <p>暂无配置厂商</p>
+        <p>暂无配置提供商</p>
         <button class="btn-primary" @click="openSettings">
           打开设置
         </button>
@@ -180,7 +180,7 @@ onUnmounted(() => {
   background: none;
   border: none;
   color: rgba(255, 255, 255, 0.35);
-  font-size: 18px;
+  font-size: 22px;
   cursor: pointer;
   padding: 4px 6px;
   line-height: 1;

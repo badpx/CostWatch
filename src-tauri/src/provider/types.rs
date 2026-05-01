@@ -194,13 +194,13 @@ pub struct GeneralSettings {
 }
 
 fn default_refresh_interval() -> u64 {
-    60
+    120
 }
 
 impl Default for GeneralSettings {
     fn default() -> Self {
         Self {
-            refresh_interval_secs: 60,
+            refresh_interval_secs: 120,
             launch_at_login: false,
         }
     }
