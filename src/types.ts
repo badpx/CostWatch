@@ -8,6 +8,7 @@ export interface ProviderState {
   available: number | null;
   currency: "USD" | "CNY" | "EUR" | { Custom: string };
   is_available: boolean | null;
+  display_label: string | null;
   status: "Ok" | "Fetching" | "Unconfigured" | { Error: string };
   last_updated: string | null;
   error_message: string | null;

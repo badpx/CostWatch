@@ -130,7 +130,13 @@ fn evaluate_expression(
     fields: &HashMap<String, serde_json::Value>,
 ) -> Result<f64, String> {
     let mut resolved_expr = expr.to_string();
-    for (name, value) in fields {
+    let mut sorted_names: Vec<&String> = fields.keys().collect();
+    sorted_names.sort_by(|a, b| b.len().cmp(&a.len()).then(a.cmp(b)));
+    for name in sorted_names {
+        if !resolved_expr.contains(name) {
+            continue;
+        }
+        let value = fields.get(name).unwrap();
         if value.is_null() {
             continue;
         }
@@ -147,7 +153,7 @@ fn evaluate_expression(
         } else {
             return Err(format!("Field '{}' is not a numeric type", name));
         };
-        resolved_expr = resolved_expr.replace(name, &num.to_string());
+        resolved_expr = resolved_expr.replace(name.as_str(), &num.to_string());
     }
 
     let allowed = resolved_expr

@@ -6,6 +6,7 @@ mod tray;
 
 use provider::plugin;
 use provider::registry::ProviderRegistry;
+use provider::types::{ProviderIcon, ProviderState, ProviderStatus};
 use state::AppState;
 use tauri::Emitter;
 use tauri::Manager;
@@ -31,10 +32,71 @@ pub fn run() {
             }
 
             let configs = registry.list().clone();
-            app.state::<AppState>().settings.lock().unwrap().clone_from(&settings);
-            *app.state::<AppState>().configs.lock().unwrap() = configs;
+            let state = app.state::<AppState>();
+            state.settings.lock().unwrap().clone_from(&settings);
+            *state.configs.lock().unwrap() = configs.clone();
+
+            // Initialize providers as Unconfigured so the UI always shows them
+            {
+                let mut providers = state.providers.lock().unwrap();
+                for (id, config) in &configs {
+                    let is_builtin = !id.starts_with("plugin-");
+                    providers.push(ProviderState {
+                        id: id.clone(),
+                        name: config.name.clone(),
+                        icon: if is_builtin {
+                            ProviderIcon::Builtin(config.icon.clone())
+                        } else {
+                            ProviderIcon::Custom(config.icon.clone())
+                        },
+                        is_builtin,
+                        balance: None,
+                        used: None,
+                        available: None,
+                        currency: provider::types::Currency::default(),
+                        is_available: None,
+                        extra_fields: Default::default(),
+                        display_label: None,
+                        status: ProviderStatus::Unconfigured,
+                        last_updated: None,
+                        error_message: None,
+                    });
+                }
+            }
 
             tray::setup_tray(app)?;
+
+            let app_handle_for_settings = app.handle().clone();
+            if let Some(settings_window) = app.get_webview_window("settings") {
+                settings_window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        api.prevent_close();
+                        if let Some(w) = app_handle_for_settings.get_webview_window("settings") {
+                            let _ = w.hide();
+                        }
+                    }
+                });
+            }
+
+            let app_handle_for_popover = app.handle().clone();
+            if let Some(popover_window) = app.get_webview_window("popover") {
+                popover_window.on_window_event(move |event| {
+                    match event {
+                        tauri::WindowEvent::CloseRequested { api, .. } => {
+                            api.prevent_close();
+                            if let Some(w) = app_handle_for_popover.get_webview_window("popover") {
+                                let _ = w.hide();
+                            }
+                        }
+                        tauri::WindowEvent::Focused(false) => {
+                            if let Some(w) = app_handle_for_popover.get_webview_window("popover") {
+                                let _ = w.hide();
+                            }
+                        }
+                        _ => {}
+                    }
+                });
+            }
 
             let app_handle = app.handle().clone();
             let interval_secs = settings.refresh_interval_secs;

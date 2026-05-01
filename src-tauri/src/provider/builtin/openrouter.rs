@@ -31,7 +31,7 @@ response:
 display:
   primary: balance
   secondary: used
-  label: "{{balance}} / {{available}}"
+  label: "{{currency_unit}}{{balance}} / {{currency_unit}}{{available}}"
   unit_prefix: "$"
   progress:
     total: available

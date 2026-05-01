@@ -78,12 +78,16 @@ const errorMessage = computed(() => {
 
 const displayLabel = computed(() => {
   const p = props.provider;
+  if (p.display_label) return p.display_label;
+
   const currencySymbol = getCurrencySymbol(p.currency);
-  const balance = p.balance != null ? `${currencySymbol}${p.balance}` : "";
-  const available = p.available != null ? `${currencySymbol}${p.available}` : "";
+  const fmt = (v: number) => Number.isInteger(v) ? String(v) : v.toFixed(2);
+  const balance = p.balance != null ? `${currencySymbol}${fmt(Number(p.balance))}` : "";
+  const available = p.available != null ? `${currencySymbol}${fmt(Number(p.available))}` : "";
 
   if (balance && available) return `${balance} / ${available}`;
   if (balance) return balance;
+  if (available) return available;
   if (p.is_available != null) return p.is_available ? "可用" : "不可用";
   return "—";
 });

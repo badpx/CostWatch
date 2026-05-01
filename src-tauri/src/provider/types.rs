@@ -24,6 +24,9 @@ pub struct ProviderState {
     // Additional display fields (provider-specific raw data)
     pub extra_fields: HashMap<String, serde_json::Value>,
 
+    // Resolved display label from config template
+    pub display_label: Option<String>,
+
     // Status
     pub status: ProviderStatus,
     pub last_updated: Option<DateTime<Utc>>,

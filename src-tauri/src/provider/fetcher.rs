@@ -10,10 +10,15 @@ pub async fn fetch_provider(
     token: &str,
     is_builtin: bool,
 ) -> ProviderState {
+    let icon = if is_builtin {
+        ProviderIcon::Builtin(config.icon.clone())
+    } else {
+        ProviderIcon::Custom(config.icon.clone())
+    };
     let mut state = ProviderState {
         id: provider_id.to_string(),
         name: config.name.clone(),
-        icon: ProviderIcon::Builtin(config.icon.clone()),
+        icon,
         is_builtin,
         balance: None,
         used: None,
@@ -21,6 +26,7 @@ pub async fn fetch_provider(
         currency: Currency::default(),
         is_available: None,
         extra_fields: HashMap::new(),
+        display_label: None,
         status: ProviderStatus::Fetching,
         last_updated: None,
         error_message: None,
@@ -71,6 +77,7 @@ pub async fn fetch_provider(
                                 .and_then(|v| v.as_bool());
 
                             state.currency = determine_currency(config, &fields);
+                            state.display_label = Some(resolve_display_label(config, &fields));
 
                             state.extra_fields = fields;
 
@@ -152,4 +159,96 @@ fn determine_currency(
     } else {
         Currency::default()
     }
+}
+
+fn resolve_display_label(
+    config: &ProviderConfig,
+    fields: &HashMap<String, serde_json::Value>,
+) -> String {
+    let mut label = config.display.label.clone();
+
+    if label.contains("{{currency_unit}}") {
+        let unit = resolve_currency_unit(config, fields);
+        label = label.replace("{{currency_unit}}", &unit);
+    }
+
+    let mut field_names: Vec<&String> = fields.keys().collect();
+    field_names.sort_by(|a, b| b.len().cmp(&a.len()));
+
+    for name in field_names {
+        let placeholder = format!("{{{{{}}}}}", name);
+        if !label.contains(&placeholder) {
+            continue;
+        }
+        let value = fields.get(name).unwrap();
+        let mapping = config.response.get(name);
+        let formatted = format_field_value(value, mapping);
+        label = label.replace(&placeholder, &formatted);
+    }
+
+    label
+}
+
+fn resolve_currency_unit(
+    config: &ProviderConfig,
+    fields: &HashMap<String, serde_json::Value>,
+) -> String {
+    if let Some(ref unit_config) = config.display.unit {
+        match unit_config {
+            UnitConfig::Static(s) => s.clone(),
+            UnitConfig::Map { field, map } => {
+                if let Some(value) = fields.get(field) {
+                    if let Some(key) = value.as_str() {
+                        if let Some(symbol) = map.get(key) {
+                            return symbol.clone();
+                        }
+                    }
+                }
+                String::new()
+            }
+        }
+    } else if let Some(ref prefix) = config.display.unit_prefix {
+        prefix.clone()
+    } else {
+        String::new()
+    }
+}
+
+fn format_field_value(
+    value: &serde_json::Value,
+    mapping: Option<&FieldMapping>,
+) -> String {
+    let field_type = mapping.map(|m| &m.field_type);
+    match field_type {
+        Some(FieldType::String) => value.as_str().unwrap_or("").to_string(),
+        Some(FieldType::Number) | Some(FieldType::StringNumber) => {
+            if let Some(f) = value.as_f64() {
+                format_decimal(f)
+            } else if let Some(s) = value.as_str() {
+                s.parse::<f64>()
+                    .map(|f| format_decimal(f))
+                    .unwrap_or_else(|_| s.to_string())
+            } else {
+                value.to_string()
+            }
+        }
+        Some(FieldType::Boolean) => value
+            .as_bool()
+            .map(|b| b.to_string())
+            .unwrap_or_else(|| value.to_string()),
+        None => format_auto(value),
+    }
+}
+
+fn format_decimal(f: f64) -> String {
+    format!("{:.2}", f)
+}
+
+fn format_auto(value: &serde_json::Value) -> String {
+    if value.is_number() {
+        if let Some(f) = value.as_f64() {
+            return format_decimal(f);
+        }
+    }
+    value.as_str().unwrap_or("").to_string()
 }

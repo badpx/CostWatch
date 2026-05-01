@@ -139,6 +139,7 @@ pub async fn refresh_all(state: tauri::State<'_, AppState>) -> Result<(), String
                 currency: Currency::default(),
                 is_available: None,
                 extra_fields: Default::default(),
+                display_label: None,
                 status: ProviderStatus::Unconfigured,
                 last_updated: None,
                 error_message: None,
