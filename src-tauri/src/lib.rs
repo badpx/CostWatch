@@ -65,6 +65,11 @@ pub fn run() {
 
             tray::setup_tray(app)?;
 
+            // Show settings window on startup so it's always accessible
+            if let Some(settings_window) = app.get_webview_window("settings") {
+                let _ = settings_window.show();
+            }
+
             let app_handle_for_settings = app.handle().clone();
             if let Some(settings_window) = app.get_webview_window("settings") {
                 settings_window.on_window_event(move |event| {

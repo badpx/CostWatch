@@ -13,7 +13,8 @@ pub fn setup_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>
     let menu = Menu::with_items(app, &[&settings_i, &quit_i])?;
 
     TrayIconBuilder::new()
-        .icon(app.default_window_icon().unwrap().clone())
+        .icon(tauri::include_image!("icons/tray-icon.png"))
+        .icon_as_template(true)
         .tooltip("TokenWatch")
         .menu(&menu)
         .show_menu_on_left_click(false)
