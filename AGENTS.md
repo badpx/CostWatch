@@ -1,4 +1,4 @@
-# TokenWatch — AGENTS.md
+# CostWatch — AGENTS.md
 
 ## Project Overview
 
@@ -41,7 +41,7 @@ Each window has its own HTML entry point: `popover.html`, `settings.html`. Confi
 
 | Module | Purpose |
 |--------|---------|
-| `lib.rs` | Tauri Builder: plugin registration, state init, provider init, window event handlers, shows settings on startup |
+- `lib.rs` | Tauri Builder: plugin registration, state init, provider init, window event handlers, shows settings on startup |
 | `tray.rs` | System tray with monochrome template icon (`include_image!` + `icon_as_template(true)`), left-click toggles popover |
 | `commands.rs` | 10 Tauri commands exposed to frontend; `save_settings` emits `settings-updated` event |
 | `state.rs` | `AppState` with `Mutex<Vec<ProviderState>>`, `Mutex<HashMap<String, ProviderConfig>>`, `Mutex<GeneralSettings>` |
@@ -49,8 +49,8 @@ Each window has its own HTML entry point: `popover.html`, `settings.html`. Confi
 | `provider/fetcher.rs` | HTTP fetch, JSONPath extraction, `resolve_display_label()`, `format_field_value()`, `format_decimal()` |
 | `provider/config_parser.rs` | YAML → `ProviderConfig` parsing, JSONPath extraction, arithmetic expression evaluator (recursive descent parser) |
 | `provider/builtin/` | OpenRouter and DeepSeek YAML configs as Rust string constants |
-| `provider/plugin.rs` | Load/import/remove YAML plugin files from `~/.tokenwatch/providers/` |
-| `storage.rs` | File-based storage: `~/.tokenwatch/config.json` (settings), `~/.tokenwatch/tokens.json` (API tokens, plaintext — Stronghold deferred) |
+| `provider/plugin.rs` | Load/import/remove YAML plugin files from `~/.costwatch/providers/` |
+| `storage.rs` | File-based storage: `~/.costwatch/config.json` (settings), `~/.costwatch/tokens.json` (API tokens, plaintext — Stronghold deferred) |
 
 ### Frontend Modules
 
@@ -68,7 +68,7 @@ Each window has its own HTML entry point: `popover.html`, `settings.html`. Confi
 
 ## Provider Plugin System
 
-Providers are defined via declarative YAML configs. Built-in providers (OpenRouter, DeepSeek) are hardcoded as Rust string constants in `provider/builtin/`. Plugin providers are YAML files in `~/.tokenwatch/providers/` with `plugin-` prefix.
+Providers are defined via declarative YAML configs. Built-in providers (OpenRouter, DeepSeek) are hardcoded as Rust string constants in `provider/builtin/`. Plugin providers are YAML files in `~/.costwatch/providers/` with `plugin-` prefix.
 
 Key YAML features:
 - `response.*.path`: JSONPath extraction from API response (uses `serde_json_path`)
@@ -106,9 +106,9 @@ Popover and settings windows use `api.prevent_close()` on `CloseRequested` + `wi
 
 ## Data Storage
 
-- Settings: `~/.tokenwatch/config.json` (refresh_interval_secs, launch_at_login)
-- Tokens: `~/.tokenwatch/tokens.json` (plaintext JSON — Stronghold encryption deferred)
-- Plugin YAML: `~/.tokenwatch/providers/*.yaml`
+- Settings: `~/.costwatch/config.json` (refresh_interval_secs, launch_at_login)
+- Tokens: `~/.costwatch/tokens.json` (plaintext JSON — Stronghold encryption deferred)
+- Plugin YAML: `~/.costwatch/providers/*.yaml`
 
 ## Known Gotchas
 

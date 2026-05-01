@@ -619,6 +619,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "costwatch"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "dirs",
+ "reqwest 0.12.12",
+ "rust_decimal",
+ "rust_decimal_macros",
+ "serde",
+ "serde_json",
+ "serde_json_path",
+ "serde_yaml",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-opener",
+ "tauri-plugin-positioner",
+ "tauri-plugin-shell",
+ "thiserror 2.0.18",
+ "tokio",
+]
+
+[[package]]
 name = "cpufeatures"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4336,29 +4359,6 @@ name = "tinyvec_macros"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
-
-[[package]]
-name = "tokenwatch"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "dirs",
- "reqwest 0.12.12",
- "rust_decimal",
- "rust_decimal_macros",
- "serde",
- "serde_json",
- "serde_json_path",
- "serde_yaml",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-opener",
- "tauri-plugin-positioner",
- "tauri-plugin-shell",
- "thiserror 2.0.18",
- "tokio",
-]
 
 [[package]]
 name = "tokio"

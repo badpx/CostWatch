@@ -1,4 +1,4 @@
-# TokenWatch
+# CostWatch
 
 macOS menu bar app for monitoring LLM API usage and balance. Click the tray icon to see provider balances in a popover, or open settings to configure API tokens and manage plugins.
 
@@ -8,7 +8,7 @@ Built-in support for **OpenRouter** and **DeepSeek**. Additional providers can b
 
 - **Backend**: Rust (Tauri v2)
 - **Frontend**: Vue 3 + TypeScript + Vite
-- **Data**: File-based storage (`~/.tokenwatch/`)
+- **Data**: File-based storage (`~/.costwatch/`)
 - **HTTP**: reqwest
 - **Config Parsing**: serde_yaml + serde_json_path
 
@@ -51,7 +51,7 @@ cargo test --manifest-path src-tauri/Cargo.toml
 
 ## Architecture
 
-TokenWatch is a two-window Tauri v2 app:
+CostWatch is a two-window Tauri v2 app:
 
 - **Popover** (308×282, transparent, no decorations) — appears near the tray icon on click, shows provider balances with auto-refresh
 - **Settings** (600×500, standard window) — token configuration, plugin management, general settings
@@ -76,7 +76,7 @@ Each window has its own HTML entry (`popover.html`, `settings.html`) and Vue ent
 | `provider/fetcher.rs` | HTTP fetch, JSONPath extraction, display label resolution |
 | `provider/config_parser.rs` | YAML → `ProviderConfig` parsing, arithmetic expression evaluator |
 | `provider/builtin/` | OpenRouter and DeepSeek configs as Rust string constants |
-| `provider/plugin.rs` | Load/import/remove YAML plugins from `~/.tokenwatch/providers/` |
+| `provider/plugin.rs` | Load/import/remove YAML plugins from `~/.costwatch/providers/` |
 | `storage.rs` | File-based storage: config.json (settings), tokens.json (API tokens) |
 
 ### Key Frontend Modules
@@ -101,7 +101,7 @@ Built-in providers are defined as YAML string constants in `src-tauri/src/provid
 
 ### Plugin Providers
 
-Place a YAML file in `~/.tokenwatch/providers/` or import via the Settings UI. Plugin IDs are automatically prefixed with `plugin-`.
+Place a YAML file in `~/.costwatch/providers/` or import via the Settings UI. Plugin IDs are automatically prefixed with `plugin-`.
 
 Example YAML:
 
@@ -145,9 +145,9 @@ Key YAML features:
 
 | File | Content |
 |------|---------|
-| `~/.tokenwatch/config.json` | General settings (refresh interval, launch-at-login) |
-| `~/.tokenwatch/tokens.json` | API tokens (plaintext — Stronghold encryption deferred) |
-| `~/.tokenwatch/providers/*.yaml` | Plugin provider configs |
+| `~/.costwatch/config.json` | General settings (refresh interval, launch-at-login) |
+| `~/.costwatch/tokens.json` | API tokens (plaintext — Stronghold encryption deferred) |
+| `~/.costwatch/providers/*.yaml` | Plugin provider configs |
 
 ## Recommended IDE Setup
 

@@ -8,7 +8,7 @@ use std::path::PathBuf;
 pub fn app_data_dir() -> PathBuf {
     dirs::home_dir()
         .expect("Cannot determine home directory")
-        .join(".tokenwatch")
+        .join(".costwatch")
 }
 
 pub fn providers_dir() -> PathBuf {

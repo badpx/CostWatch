@@ -117,5 +117,5 @@ pub fn run() {
             commands::save_settings,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running TokenWatch");
+        .expect("error while running CostWatch");
 }

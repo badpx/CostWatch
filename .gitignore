@@ -5,5 +5,5 @@ target/
 *.local
 *.log
 
-# TokenWatch specific
+# CostWatch specific
 .tokens.json

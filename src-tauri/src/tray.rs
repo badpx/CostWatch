@@ -8,14 +8,14 @@ use tauri_plugin_positioner::{on_tray_event, Position, WindowExt};
 pub fn setup_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     app.set_activation_policy(ActivationPolicy::Accessory);
 
-    let quit_i = MenuItem::with_id(app, "quit", "Quit TokenWatch", true, None::<&str>)?;
+    let quit_i = MenuItem::with_id(app, "quit", "Quit CostWatch", true, None::<&str>)?;
     let settings_i = MenuItem::with_id(app, "settings", "Settings...", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&settings_i, &quit_i])?;
 
     TrayIconBuilder::new()
         .icon(tauri::include_image!("icons/tray-icon.png"))
         .icon_as_template(true)
-        .tooltip("TokenWatch")
+        .tooltip("CostWatch")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {

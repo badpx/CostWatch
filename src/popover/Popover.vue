@@ -1,7 +1,7 @@
 <template>
   <div class="popover-container">
     <div class="popover-header">
-      <h1 class="popover-title">TokenWatch</h1>
+      <h1 class="popover-title">CostWatch</h1>
       <button
         v-if="!loading"
         class="refresh-btn"

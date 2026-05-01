@@ -5,7 +5,7 @@
 
 <template>
   <main class="container">
-    <h1>TokenWatch</h1>
+    <h1>CostWatch</h1>
     <p>Select a window from the tray menu.</p>
   </main>
 </template>

@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "TokenWatch",
+  "productName": "CostWatch",
   "version": "0.1.0",
-  "identifier": "com.tokenwatch.app",
+  "identifier": "com.costwatch.app",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -15,7 +15,7 @@
     "windows": [
       {
         "label": "popover",
-        "title": "TokenWatch",
+        "title": "CostWatch",
         "width": 308,
         "height": 282,
         "decorations": false,
@@ -26,7 +26,7 @@
       },
       {
         "label": "settings",
-        "title": "TokenWatch Settings",
+        "title": "CostWatch Settings",
         "width": 600,
         "height": 500,
         "decorations": true,

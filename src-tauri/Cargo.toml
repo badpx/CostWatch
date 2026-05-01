@@ -1,12 +1,12 @@
 [package]
-name = "tokenwatch"
+name = "costwatch"
 version = "0.1.0"
 description = "macOS menu bar app for monitoring LLM API usage"
 authors = ["you"]
 edition = "2021"
 
 [lib]
-name = "tokenwatch_lib"
+name = "costwatch_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

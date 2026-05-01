@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Default capabilities for TokenWatch",
+  "description": "Default capabilities for CostWatch",
   "windows": ["popover", "settings"],
   "permissions": [
     "core:default",
