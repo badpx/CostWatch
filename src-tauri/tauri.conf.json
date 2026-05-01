@@ -15,13 +15,13 @@
       {
         "label": "popover",
         "title": "TokenWatch",
-        "width": 320,
-        "height": 420,
+        "width": 308,
+        "height": 282,
         "decorations": false,
         "transparent": true,
         "resizable": false,
-        "visible": true,
-        "url": "/"
+        "visible": false,
+        "url": "/popover"
       },
       {
         "label": "settings",

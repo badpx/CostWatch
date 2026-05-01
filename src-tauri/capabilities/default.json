@@ -16,6 +16,8 @@
     "core:tray:allow-set-tooltip",
     "opener:default",
     "shell:allow-open",
-    "dialog:default"
+    "dialog:default",
+    "positioner:default",
+    "positioner:allow-move-window"
   ]
 }
