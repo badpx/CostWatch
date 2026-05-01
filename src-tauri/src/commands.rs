@@ -37,6 +37,9 @@ pub async fn save_token(
         let fetched =
             fetcher::fetch_provider(&config, &provider_id, token_str, is_builtin).await;
 
+        let mut fetched = fetched;
+        fetched.has_token = true;
+
         let mut providers = state.providers.lock().unwrap();
         if let Some(pos) = providers.iter().position(|p| p.id == provider_id) {
             providers[pos] = fetched;
@@ -49,8 +52,25 @@ pub async fn save_token(
 }
 
 #[tauri::command]
-pub async fn delete_token(provider_id: String) -> Result<(), String> {
-    crate::storage::delete_token(&provider_id)
+pub async fn delete_token(
+    state: tauri::State<'_, AppState>,
+    provider_id: String,
+) -> Result<(), String> {
+    crate::storage::delete_token(&provider_id)?;
+
+    let mut providers = state.providers.lock().unwrap();
+    if let Some(pos) = providers.iter().position(|p| p.id == provider_id) {
+        providers[pos].has_token = false;
+        providers[pos].status = ProviderStatus::Unconfigured;
+        providers[pos].balance = None;
+        providers[pos].used = None;
+        providers[pos].available = None;
+        providers[pos].display_label = None;
+        providers[pos].last_updated = None;
+        providers[pos].error_message = None;
+    }
+
+    Ok(())
 }
 
 #[tauri::command]
@@ -70,7 +90,8 @@ pub async fn test_connection(
         .ok_or_else(|| String::from("No token configured for this provider"))?;
 
     let is_builtin = !provider_id.starts_with("plugin-");
-    let result = fetcher::fetch_provider(&config, &provider_id, &token, is_builtin).await;
+    let mut result = fetcher::fetch_provider(&config, &provider_id, &token, is_builtin).await;
+    result.has_token = true;
 
     match &result.status {
         ProviderStatus::Ok => Ok(result),
@@ -96,7 +117,8 @@ pub async fn refresh_provider(
         .ok_or_else(|| String::from("No token configured"))?;
 
     let is_builtin = !provider_id.starts_with("plugin-");
-    let result = fetcher::fetch_provider(&config, &provider_id, &token, is_builtin).await;
+    let mut result = fetcher::fetch_provider(&config, &provider_id, &token, is_builtin).await;
+    result.has_token = true;
 
     let mut providers = state.providers.lock().unwrap();
     if let Some(pos) = providers.iter().position(|p| p.id == provider_id) {
@@ -120,8 +142,9 @@ pub async fn refresh_all(state: tauri::State<'_, AppState>) -> Result<(), String
                 continue;
             }
             let is_builtin = !id.starts_with("plugin-");
-            let result =
+            let mut result =
                 fetcher::fetch_provider(config, id, &token_entry.token, is_builtin).await;
+            result.has_token = true;
             updated_providers.push(result);
         } else {
             let is_builtin = !id.starts_with("plugin-");
@@ -141,6 +164,7 @@ pub async fn refresh_all(state: tauri::State<'_, AppState>) -> Result<(), String
                 is_available: None,
                 extra_fields: Default::default(),
                 display_label: None,
+                has_token: false,
                 status: ProviderStatus::Unconfigured,
                 last_updated: None,
                 error_message: None,

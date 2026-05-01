@@ -13,9 +13,9 @@
         </span>
       </div>
       <div class="provider-actions">
-        <template v-if="hasToken(provider.id)">
+        <template v-if="provider.has_token">
           <div class="token-display">
-            <span class="token-masked">sk-••••••••{{ tokenSuffix(provider.id) }}</span>
+            <span class="token-masked">••••••••</span>
           </div>
           <button class="btn-test" @click="testConnection(provider.id)">
             测试
@@ -33,7 +33,7 @@
               placeholder="输入 API Token"
             />
             <button class="btn-toggle" @click="toggleTokenVisibility(provider.id)">
-              {{ showToken[provider.id] ? '🙈' : '👁' }}
+              {{ showToken[provider.id] ? '👁' : '🙈' }}
             </button>
             <button
               class="btn-primary"
@@ -52,25 +52,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { invoke } from "@tauri-apps/api/core";
+import { ask } from "@tauri-apps/plugin-dialog";
 import type { ProviderState } from "../types";
 
 const providers = ref<ProviderState[]>([]);
 const tokenInputs = ref<Record<string, string>>({});
 const showToken = ref<Record<string, boolean>>({});
-const tokenStore = ref<Record<string, string>>({});
 
 const builtinProviders = computed(() =>
   providers.value.filter((p) => p.is_builtin)
 );
-
-function hasToken(id: string): boolean {
-  return !!tokenStore.value[id];
-}
-
-function tokenSuffix(id: string): string {
-  const token = tokenStore.value[id] || "";
-  return token.length > 8 ? token.slice(-4) : "";
-}
 
 function statusClass(provider: ProviderState): string {
   if (typeof provider.status === "string") {
@@ -102,14 +93,19 @@ async function saveToken(id: string) {
   const token = tokenInputs.value[id];
   if (!token) return;
   await invoke("save_token", { providerId: id, token });
-  tokenStore.value[id] = token;
   tokenInputs.value[id] = "";
   await refreshData();
 }
 
 async function deleteToken(id: string) {
+  const confirmed = await ask("确定要删除此 Token 吗？删除后需要重新配置才能继续使用。", {
+    title: "删除确认",
+    kind: "warning",
+    okLabel: "删除",
+    cancelLabel: "取消",
+  });
+  if (!confirmed) return;
   await invoke("delete_token", { providerId: id });
-  delete tokenStore.value[id];
   await refreshData();
 }
 

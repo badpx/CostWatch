@@ -6,7 +6,7 @@ mod tray;
 
 use provider::plugin;
 use provider::registry::ProviderRegistry;
-use provider::types::{ProviderIcon, ProviderState, ProviderStatus};
+use provider::types::{Currency, ProviderIcon, ProviderState, ProviderStatus};
 use state::AppState;
 use tauri::Manager;
 
@@ -35,11 +35,13 @@ pub fn run() {
             state.settings.lock().unwrap().clone_from(&settings);
             *state.configs.lock().unwrap() = configs.clone();
 
-            // Initialize providers as Unconfigured so the UI always shows them
+            // Initialize providers
+            let tokens = storage::load_tokens().unwrap_or_default();
             {
                 let mut providers = state.providers.lock().unwrap();
                 for (id, config) in &configs {
                     let is_builtin = !id.starts_with("plugin-");
+                    let has_token = tokens.providers.contains_key(id);
                     providers.push(ProviderState {
                         id: id.clone(),
                         name: config.name.clone(),
@@ -52,11 +54,16 @@ pub fn run() {
                         balance: None,
                         used: None,
                         available: None,
-                        currency: provider::types::Currency::default(),
+                        currency: Currency::default(),
                         is_available: None,
                         extra_fields: Default::default(),
                         display_label: None,
-                        status: ProviderStatus::Unconfigured,
+                        has_token,
+                        status: if has_token {
+                            ProviderStatus::Unconfigured
+                        } else {
+                            ProviderStatus::Unconfigured
+                        },
                         last_updated: None,
                         error_message: None,
                     });

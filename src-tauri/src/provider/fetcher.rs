@@ -27,6 +27,7 @@ pub async fn fetch_provider(
         is_available: None,
         extra_fields: HashMap::new(),
         display_label: None,
+        has_token: false,
         status: ProviderStatus::Fetching,
         last_updated: None,
         error_message: None,

@@ -27,6 +27,9 @@ pub struct ProviderState {
     // Resolved display label from config template
     pub display_label: Option<String>,
 
+    // Whether a token is stored for this provider
+    pub has_token: bool,
+
     // Status
     pub status: ProviderStatus,
     pub last_updated: Option<DateTime<Utc>>,
