@@ -101,6 +101,7 @@ onUnmounted(() => {
 <style scoped>
 .popover-container {
   width: 100%;
+  height: 100%;
   background: rgba(40, 40, 40, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
@@ -110,6 +111,9 @@ onUnmounted(() => {
   padding: 14px;
   box-sizing: border-box;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 .popover-header {
   display: flex;
@@ -117,6 +121,7 @@ onUnmounted(() => {
   align-items: center;
   margin-bottom: 10px;
   user-select: none;
+  flex-shrink: 0;
 }
 .popover-title {
   font-size: 15px;
@@ -149,6 +154,9 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 .empty-state {
   text-align: center;
@@ -181,6 +189,7 @@ onUnmounted(() => {
   padding-top: 6px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   user-select: none;
+  flex-shrink: 0;
 }
 .auto-refresh {
   font-size: 11px;
