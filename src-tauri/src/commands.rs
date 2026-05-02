@@ -6,7 +6,9 @@ use tauri::Emitter;
 
 #[tauri::command]
 pub async fn get_providers(state: tauri::State<'_, AppState>) -> Result<Vec<ProviderState>, String> {
-    Ok(state.providers.lock().unwrap().clone())
+    let mut providers = state.providers.lock().unwrap().clone();
+    providers.sort_by(|a, b| b.has_token.cmp(&a.has_token));
+    Ok(providers)
 }
 
 #[tauri::command]
