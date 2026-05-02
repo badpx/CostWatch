@@ -153,7 +153,12 @@ fn evaluate_expression(
         } else {
             return Err(format!("Field '{}' is not a numeric type", name));
         };
-        resolved_expr = resolved_expr.replace(name.as_str(), &num.to_string());
+        let num_str = if num < 0.0 {
+            format!("({})", num)
+        } else {
+            num.to_string()
+        };
+        resolved_expr = resolved_expr.replace(name.as_str(), &num_str);
     }
 
     let allowed = resolved_expr
@@ -211,6 +216,10 @@ fn parse_multiplicative(chars: &[char], pos: usize) -> Result<(f64, usize), Stri
 fn parse_primary(chars: &[char], pos: usize) -> Result<(f64, usize), String> {
     if pos >= chars.len() {
         return Err("Unexpected end of expression".into());
+    }
+    if chars[pos] == '-' {
+        let (result, new_pos) = parse_primary(chars, pos + 1)?;
+        return Ok((-result, new_pos));
     }
     if chars[pos] == '(' {
         let (result, pos) = parse_additive(chars, pos + 1)?;
@@ -314,5 +323,13 @@ display:
         fields.insert("c".into(), serde_json::json!(5.0));
         let result = evaluate_expression("(a + b) * c", &fields).unwrap();
         assert!((result - 150.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_expression_with_negative_field() {
+        let mut fields = HashMap::new();
+        fields.insert("stripe_balance".into(), serde_json::json!(-5.25));
+        let result = evaluate_expression("0 - stripe_balance", &fields).unwrap();
+        assert!((result - 5.25).abs() < 0.001);
     }
 }
