@@ -83,22 +83,12 @@ pub fn extract_fields(
             let queried_vec: Vec<&serde_json::Value> = queried.all().into_iter().collect();
 
             if queried_vec.is_empty() {
-                let top_keys: Vec<&String> = match response {
-                    serde_json::Value::Object(map) => map.keys().collect(),
-                    _ => Vec::new(),
-                };
-                return Err(format!(
-                    "JSONPath '{}' for field '{}' returned no results (response keys: {:?})",
-                    path, name, top_keys
-                ));
+                serde_json::Value::Null
+            } else if queried_vec.len() > 1 {
+                serde_json::Value::Null
+            } else {
+                queried_vec[0].clone()
             }
-            if queried_vec.len() > 1 {
-                return Err(format!(
-                    "JSONPath '{}' for field '{}' returned multiple results, expected single value",
-                    path, name
-                ));
-            }
-            queried_vec[0].clone()
         } else if let Some(ref val) = mapping.value {
             serde_json::Value::String(val.clone())
         } else if let Some(ref _expr) = mapping.expr {
@@ -116,14 +106,25 @@ pub fn extract_fields(
     // Second pass: resolve expressions (they reference other extracted fields)
     for (name, mapping) in &config.response {
         if let Some(ref expr) = mapping.expr {
-            let resolved = evaluate_expression(expr, &extracted)?;
-            extracted.insert(
-                name.clone(),
-                serde_json::Value::Number(
-                    serde_json::Number::from_f64(resolved)
-                        .unwrap_or(serde_json::Number::from(0)),
-                ),
-            );
+            let field_names: Vec<&str> = expr
+                .split(|c: char| !c.is_alphanumeric() && c != '_')
+                .filter(|s| !s.is_empty() && extracted.contains_key(*s))
+                .collect();
+            let has_null = field_names.iter().any(|n| extracted[*n].is_null());
+
+            if has_null {
+                extracted.insert(name.clone(), serde_json::Value::Null);
+            } else if let Ok(resolved) = evaluate_expression(expr, &extracted) {
+                extracted.insert(
+                    name.clone(),
+                    serde_json::Value::Number(
+                        serde_json::Number::from_f64(resolved)
+                            .unwrap_or(serde_json::Number::from(0)),
+                    ),
+                );
+            } else {
+                extracted.insert(name.clone(), serde_json::Value::Null);
+            }
         }
     }
 
