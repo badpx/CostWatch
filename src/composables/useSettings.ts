@@ -4,7 +4,7 @@ import type { GeneralSettings } from "../types";
 
 export function useSettings() {
   const settings = ref<GeneralSettings>({
-    refresh_interval_secs: 60,
+    refresh_interval_secs: 180,
     launch_at_login: false,
   });
 
