@@ -98,6 +98,8 @@ pub struct ApiConfig {
     pub method: HttpMethod,
     #[serde(default)]
     pub headers: HashMap<String, String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub body: Option<String>,
 }
 
 fn default_method() -> HttpMethod {

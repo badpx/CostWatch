@@ -83,9 +83,13 @@ pub fn extract_fields(
             let queried_vec: Vec<&serde_json::Value> = queried.all().into_iter().collect();
 
             if queried_vec.is_empty() {
+                let top_keys: Vec<&String> = match response {
+                    serde_json::Value::Object(map) => map.keys().collect(),
+                    _ => Vec::new(),
+                };
                 return Err(format!(
-                    "JSONPath '{}' for field '{}' returned no results",
-                    path, name
+                    "JSONPath '{}' for field '{}' returned no results (response keys: {:?})",
+                    path, name, top_keys
                 ));
             }
             if queried_vec.len() > 1 {

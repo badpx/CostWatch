@@ -3,6 +3,7 @@ use crate::provider::types::*;
 use chrono::Utc;
 use rust_decimal::Decimal;
 use std::collections::HashMap;
+use uuid::Uuid;
 
 pub async fn fetch_provider(
     config: &ProviderConfig,
@@ -50,6 +51,21 @@ pub async fn fetch_provider(
     let request_builder = headers.into_iter().fold(request_builder, |rb, (k, v)| {
         rb.header(k, v)
     });
+
+    let request_builder = if let Some(ref body) = config.api.body {
+        let escaped_token = token.replace('\\', "\\\\").replace('"', "\\\"");
+        let body_str = body
+            .replace("{{token}}", &escaped_token)
+            .replace("{{uuid}}", &Uuid::new_v4().to_string());
+        let rb = if config.api.headers.contains_key("Content-Type") {
+            request_builder
+        } else {
+            request_builder.header("Content-Type", "application/json")
+        };
+        rb.body(body_str)
+    } else {
+        request_builder
+    };
 
     match request_builder.send().await {
         Ok(response) => {

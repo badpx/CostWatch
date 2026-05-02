@@ -28,6 +28,7 @@ export interface ApiConfig {
   url: string;
   method: "GET" | "POST";
   headers: Record<string, string>;
+  body?: string;
 }
 
 export interface FieldMapping {
