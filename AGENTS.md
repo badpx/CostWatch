@@ -27,7 +27,7 @@ cargo test --manifest-path src-tauri/Cargo.toml
 
 ### Two-Window App
 
-- **Popover** (308×282, transparent, no decorations) — menu bar popup showing provider balances
+- **Popover** (308×350, transparent, no decorations) — menu bar popup showing provider balances
 - **Settings** (600×500, standard window) — token config, plugin management, general settings
 - Popover auto-hides on focus loss (`WindowEvent::Focused(false)`)
 - Settings window hides (not closes) on close request

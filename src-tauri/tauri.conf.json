@@ -17,7 +17,7 @@
         "label": "popover",
         "title": "CostWatch",
         "width": 308,
-        "height": 282,
+        "height": 350,
         "decorations": false,
         "transparent": true,
         "resizable": false,
