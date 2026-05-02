@@ -50,6 +50,7 @@ import { listen } from "@tauri-apps/api/event";
 const {
   providers,
   loading,
+  fetchProviders,
   refreshAll,
   refreshProvider,
   startAutoRefresh,
@@ -68,6 +69,7 @@ async function openSettings() {
 }
 
 let unlistenSettings: (() => void) | null = null;
+let unlistenProviders: (() => void) | null = null;
 
 onMounted(async () => {
   await loadSettings();
@@ -77,6 +79,10 @@ onMounted(async () => {
     await loadSettings();
     startAutoRefresh(settings.value.refresh_interval_secs * 1000);
   });
+
+  unlistenProviders = await listen("providers-updated", async () => {
+    await fetchProviders();
+  });
 });
 
 onUnmounted(() => {
@@ -84,6 +90,10 @@ onUnmounted(() => {
   if (unlistenSettings) {
     unlistenSettings();
     unlistenSettings = null;
+  }
+  if (unlistenProviders) {
+    unlistenProviders();
+    unlistenProviders = null;
   }
 });
 </script>

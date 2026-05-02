@@ -11,6 +11,7 @@ pub async fn get_providers(state: tauri::State<'_, AppState>) -> Result<Vec<Prov
 
 #[tauri::command]
 pub async fn save_token(
+    app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
     provider_id: String,
     token: String,
@@ -48,11 +49,13 @@ pub async fn save_token(
         }
     }
 
+    let _ = app.emit("providers-updated", ());
     Ok(())
 }
 
 #[tauri::command]
 pub async fn delete_token(
+    app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
     provider_id: String,
 ) -> Result<(), String> {
@@ -69,12 +72,15 @@ pub async fn delete_token(
         providers[pos].last_updated = None;
         providers[pos].error_message = None;
     }
+    drop(providers);
 
+    let _ = app.emit("providers-updated", ());
     Ok(())
 }
 
 #[tauri::command]
 pub async fn test_connection(
+    app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
     provider_id: String,
 ) -> Result<ProviderState, String> {
@@ -92,6 +98,15 @@ pub async fn test_connection(
     let is_builtin = !provider_id.starts_with("plugin-");
     let mut result = fetcher::fetch_provider(&config, &provider_id, &token, is_builtin).await;
     result.has_token = true;
+
+    if matches!(result.status, ProviderStatus::Ok) {
+        let mut providers = state.providers.lock().unwrap();
+        if let Some(pos) = providers.iter().position(|p| p.id == provider_id) {
+            providers[pos] = result.clone();
+        }
+        drop(providers);
+        let _ = app.emit("providers-updated", ());
+    }
 
     match &result.status {
         ProviderStatus::Ok => Ok(result),
