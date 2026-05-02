@@ -50,9 +50,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { ask } from "@tauri-apps/plugin-dialog";
+import { listen } from "@tauri-apps/api/event";
 import type { ProviderState } from "../types";
 
 const providers = ref<ProviderState[]>([]);
@@ -74,7 +75,7 @@ function statusText(provider: ProviderState): string {
   if (typeof provider.status === "string") {
     const map: Record<string, string> = {
       Ok: "✓ 已连接",
-      Fetching: "⏳ 获取中",
+      Fetching: "⏳ 连接中",
       Unconfigured: "未配置",
     };
     return map[provider.status] || provider.status;
@@ -125,7 +126,19 @@ async function refreshData() {
   providers.value = await invoke<ProviderState[]>("get_providers");
 }
 
-onMounted(refreshData);
+let unlisten: (() => void) | null = null;
+
+onMounted(async () => {
+  await refreshData();
+  unlisten = await listen("providers-updated", () => refreshData());
+});
+
+onUnmounted(() => {
+  if (unlisten) {
+    unlisten();
+    unlisten = null;
+  }
+});
 </script>
 
 <style scoped>

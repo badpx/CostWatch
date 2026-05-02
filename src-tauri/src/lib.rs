@@ -8,6 +8,7 @@ use provider::plugin;
 use provider::registry::ProviderRegistry;
 use provider::types::{Currency, ProviderIcon, ProviderState, ProviderStatus};
 use state::AppState;
+use tauri::Emitter;
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -61,7 +62,7 @@ pub fn run() {
                         has_token,
                         has_progress: config.display.progress.is_some(),
                         status: if has_token {
-                            ProviderStatus::Unconfigured
+                            ProviderStatus::Fetching
                         } else {
                             ProviderStatus::Unconfigured
                         },
@@ -109,6 +110,35 @@ pub fn run() {
                     }
                 });
             }
+
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+                let state = app_handle.state::<AppState>();
+                let configs = state.configs.lock().unwrap().clone();
+                let tokens = match crate::storage::load_tokens() {
+                    Ok(t) => t,
+                    Err(_) => return,
+                };
+                for (id, config) in &configs {
+                    if let Some(token_entry) = tokens.providers.get(id) {
+                        if !token_entry.enabled {
+                            continue;
+                        }
+                        let is_builtin = !id.starts_with("plugin-");
+                        let mut result = crate::provider::fetcher::fetch_provider(
+                            config, id, &token_entry.token, is_builtin,
+                        )
+                        .await;
+                        result.has_token = true;
+                        let mut providers = state.providers.lock().unwrap();
+                        if let Some(pos) = providers.iter().position(|p| p.id == *id) {
+                            providers[pos] = result;
+                        }
+                    }
+                }
+                let _ = app_handle.emit("providers-updated", ());
+            });
 
             Ok(())
         })
