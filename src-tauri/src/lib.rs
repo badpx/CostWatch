@@ -59,6 +59,7 @@ pub fn run() {
                         extra_fields: Default::default(),
                         display_label: None,
                         has_token,
+                        has_progress: config.display.progress.is_some(),
                         status: if has_token {
                             ProviderStatus::Unconfigured
                         } else {

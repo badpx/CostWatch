@@ -10,6 +10,7 @@ export interface ProviderState {
   is_available: boolean | null;
   display_label: string | null;
   has_token: boolean;
+  has_progress: boolean;
   status: "Ok" | "Fetching" | "Unconfigured" | { Error: string };
   last_updated: string | null;
   error_message: string | null;
@@ -42,7 +43,7 @@ export interface DisplayConfig {
   label: string;
   unit_prefix?: string;
   unit?: UnitConfig;
-  progress: ProgressConfig;
+  progress?: ProgressConfig;
 }
 
 export type UnitConfig =

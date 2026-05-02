@@ -30,10 +30,6 @@ display:
   secondary: used
   label: "{{currency_unit}}{{available}}"
   unit_prefix: "$"
-  progress:
-    total: available
-    used: used
-    direction: consumption
 "#;
     crate::provider::config_parser::parse_provider_config(yaml)
         .expect("DeepInfra builtin config should parse correctly")

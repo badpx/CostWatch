@@ -28,6 +28,7 @@ pub async fn fetch_provider(
         extra_fields: HashMap::new(),
         display_label: None,
         has_token: false,
+        has_progress: config.display.progress.is_some(),
         status: ProviderStatus::Fetching,
         last_updated: None,
         error_message: None,

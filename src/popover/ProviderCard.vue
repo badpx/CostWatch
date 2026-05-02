@@ -19,7 +19,7 @@
       <div class="provider-balance">
         <span class="balance-label">{{ displayLabel }}</span>
       </div>
-      <div class="progress-bar">
+      <div v-if="provider.has_progress" class="progress-bar">
         <div
           class="progress-fill"
           :style="{ width: progressPercent + '%' }"

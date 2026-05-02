@@ -30,6 +30,9 @@ pub struct ProviderState {
     // Whether a token is stored for this provider
     pub has_token: bool,
 
+    // Whether this provider has meaningful progress (total vs used)
+    pub has_progress: bool,
+
     // Status
     pub status: ProviderStatus,
     pub last_updated: Option<DateTime<Utc>>,
@@ -139,7 +142,8 @@ pub struct DisplayConfig {
     pub unit_prefix: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub unit: Option<UnitConfig>,
-    pub progress: ProgressConfig,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub progress: Option<ProgressConfig>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

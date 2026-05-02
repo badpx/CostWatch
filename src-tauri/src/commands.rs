@@ -182,6 +182,7 @@ pub async fn refresh_all(state: tauri::State<'_, AppState>) -> Result<(), String
                 extra_fields: Default::default(),
                 display_label: None,
                 has_token: false,
+                has_progress: config.display.progress.is_some(),
                 status: ProviderStatus::Unconfigured,
                 last_updated: None,
                 error_message: None,

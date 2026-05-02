@@ -36,17 +36,19 @@ fn validate_provider_config(config: &ProviderConfig) -> Result<(), String> {
         }
     }
 
-    if !response_fields.contains(&config.display.progress.total.as_str()) {
-        return Err(format!(
-            "progress.total '{}' not found in response fields",
-            config.display.progress.total
-        ));
-    }
-    if !response_fields.contains(&config.display.progress.used.as_str()) {
-        return Err(format!(
-            "progress.used '{}' not found in response fields",
-            config.display.progress.used
-        ));
+    if let Some(ref progress) = config.display.progress {
+        if !response_fields.contains(&progress.total.as_str()) {
+            return Err(format!(
+                "progress.total '{}' not found in response fields",
+                progress.total
+            ));
+        }
+        if !response_fields.contains(&progress.used.as_str()) {
+            return Err(format!(
+                "progress.used '{}' not found in response fields",
+                progress.used
+            ));
+        }
     }
 
     for (name, mapping) in &config.response {

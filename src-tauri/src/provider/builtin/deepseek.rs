@@ -37,10 +37,6 @@ display:
     map:
       CNY: "¥"
       USD: "$"
-  progress:
-    total: available
-    used: granted
-    direction: remaining
 "#;
     crate::provider::config_parser::parse_provider_config(yaml)
         .expect("DeepSeek builtin config should parse correctly")
