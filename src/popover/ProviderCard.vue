@@ -151,17 +151,17 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
 
 <style scoped>
 .provider-card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px 12px;
   transition: background 0.15s ease;
 }
 .provider-card:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--bg-surface-hover);
 }
 .provider-card.error {
-  border-color: rgba(255, 59, 48, 0.25);
+  border-color: var(--danger-border);
 }
 .provider-card.unconfigured {
   opacity: 0.55;
@@ -175,7 +175,7 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
 .provider-name {
   font-weight: 600;
   font-size: 13px;
-  color: #f0f0f0;
+  color: var(--text-heading);
   letter-spacing: -0.1px;
   display: flex;
   align-items: center;
@@ -185,7 +185,7 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--icon-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -204,14 +204,14 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
   display: inline-block;
 }
 .status-dot.ok {
-  background: #30d158;
+  background: var(--success);
 }
 .status-dot.fetching {
-  background: #ff9f0a;
+  background: var(--warning);
   animation: pulse 1.2s ease-in-out infinite;
 }
 .status-dot.error {
-  background: #ff453a;
+  background: var(--danger);
 }
 @keyframes pulse {
   0% { opacity: 1; }
@@ -221,13 +221,13 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
 .provider-balance {
   font-size: 17px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-heading);
   margin-bottom: 6px;
   letter-spacing: -0.3px;
 }
 .progress-bar {
   height: 4px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-input);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -237,7 +237,7 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
   transition: width 0.3s ease;
 }
 .progress-fill.consumption {
-  background: #30d158;
+  background: var(--success);
 }
 .provider-meta {
   margin-top: 5px;
@@ -246,31 +246,31 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
 }
 .last-updated {
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-tertiary);
 }
 .provider-message {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-size: 12px;
   margin: 5px 0 7px;
 }
 .provider-message.error {
-  color: #ff453a;
+  color: var(--danger);
   font-size: 11px;
 }
 .btn-small {
   padding: 3px 10px;
   font-size: 11px;
   font-weight: 500;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .btn-small:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
+  background: var(--bg-btn-hover);
+  border-color: var(--border-hover);
+  color: var(--text-heading);
 }
 </style>

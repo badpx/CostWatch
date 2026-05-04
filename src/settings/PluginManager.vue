@@ -139,13 +139,13 @@ onMounted(refreshData);
 .section-title {
   font-size: 14px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 12px;
 }
 .plugin-item {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-surface);
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 8px;
@@ -163,12 +163,12 @@ onMounted(refreshData);
 }
 .plugin-id {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-tertiary);
   font-family: monospace;
 }
 .btn-primary {
   padding: 6px 14px;
-  background: #007aff;
+  background: var(--accent);
   color: white;
   border: none;
   border-radius: 4px;
@@ -178,14 +178,14 @@ onMounted(refreshData);
 .btn-danger {
   padding: 4px 10px;
   background: none;
-  border: 1px solid rgba(255, 59, 48, 0.3);
-  color: #ff3b30;
+  border: 1px solid var(--danger-border);
+  color: var(--danger-text);
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
 }
 .empty-state {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-tertiary);
   font-size: 13px;
   text-align: center;
   padding: 16px;
@@ -199,7 +199,7 @@ onMounted(refreshData);
 .btn-link {
   background: none;
   border: none;
-  color: #007aff;
+  color: var(--accent);
   cursor: pointer;
   font-size: 13px;
   padding: 0;
@@ -210,19 +210,19 @@ onMounted(refreshData);
 .guide-panel {
   margin-top: 16px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
 }
 .guide-title {
   font-size: 14px;
   font-weight: 600;
-  color: #e0e0e0;
+  color: var(--text-primary);
   margin: 0 0 8px;
 }
 .guide-desc {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   margin: 0 0 12px;
   line-height: 1.5;
 }
@@ -232,14 +232,14 @@ onMounted(refreshData);
 .guide-subtitle {
   font-size: 12px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   margin: 0 0 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 .guide-list {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   line-height: 1.6;
   padding-left: 16px;
   margin: 0;
@@ -248,15 +248,15 @@ onMounted(refreshData);
   margin-bottom: 4px;
 }
 .guide-list code {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface-hover);
   padding: 1px 4px;
   border-radius: 3px;
   font-size: 11px;
-  color: #e0e0e0;
+  color: var(--text-primary);
 }
 .code-block {
   position: relative;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--bg-code);
   border-radius: 6px;
   padding: 12px;
   overflow-x: auto;
@@ -265,7 +265,7 @@ onMounted(refreshData);
   margin: 0;
   font-size: 12px;
   font-family: "SF Mono", "Fira Code", "JetBrains Mono", monospace;
-  color: #e0e0e0;
+  color: var(--text-primary);
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-all;
@@ -275,14 +275,14 @@ onMounted(refreshData);
   top: 8px;
   right: 8px;
   padding: 3px 10px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.7);
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
   border-radius: 4px;
   cursor: pointer;
   font-size: 11px;
 }
 .btn-copy:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--border-hover);
 }
 </style>

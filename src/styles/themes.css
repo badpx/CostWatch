@@ -1,0 +1,67 @@
+/* CostWatch — Light & Dark theme via CSS custom properties */
+/* Follows macOS system appearance via prefers-color-scheme */
+
+:root {
+  /* Dark theme (default) */
+  --bg-app: #1e1e1e;
+  --bg-popover: rgba(40, 40, 40, 0.96);
+  --bg-surface: rgba(255, 255, 255, 0.05);
+  --bg-surface-hover: rgba(255, 255, 255, 0.08);
+  --bg-input: rgba(255, 255, 255, 0.08);
+  --bg-btn-hover: rgba(255, 255, 255, 0.14);
+  --bg-code: rgba(0, 0, 0, 0.3);
+
+  --text-primary: #e0e0e0;
+  --text-heading: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-tertiary: rgba(255, 255, 255, 0.35);
+  --text-muted: rgba(255, 255, 255, 0.5);
+
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --border-hover: rgba(255, 255, 255, 0.2);
+
+  --accent: #007aff;
+  --accent-hover: #3395ff;
+
+  --success: #30d158;
+  --success-bg: rgba(52, 199, 89, 0.2);
+  --success-text: #34c759;
+
+  --warning: #ff9f0a;
+
+  --danger: #ff453a;
+  --danger-text: #ff3b30;
+  --danger-bg: rgba(255, 59, 48, 0.2);
+  --danger-border: rgba(255, 59, 48, 0.25);
+
+  --icon-bg: #ffffff;
+
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-app: #f5f5f5;
+    --bg-popover: rgba(255, 255, 255, 0.97);
+    --bg-surface: rgba(0, 0, 0, 0.04);
+    --bg-surface-hover: rgba(0, 0, 0, 0.06);
+    --bg-input: rgba(0, 0, 0, 0.06);
+    --bg-btn-hover: rgba(0, 0, 0, 0.08);
+    --bg-code: rgba(0, 0, 0, 0.06);
+
+    --text-primary: #1d1d1f;
+    --text-heading: #000000;
+    --text-secondary: rgba(0, 0, 0, 0.55);
+    --text-tertiary: rgba(0, 0, 0, 0.3);
+    --text-muted: rgba(0, 0, 0, 0.45);
+
+    --border: rgba(0, 0, 0, 0.08);
+    --border-strong: rgba(0, 0, 0, 0.15);
+    --border-hover: rgba(0, 0, 0, 0.2);
+
+    --icon-bg: #e8e8ed;
+
+    --shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+  }
+}

@@ -180,13 +180,13 @@ onUnmounted(() => {
 .section-title {
   font-size: 14px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 12px;
 }
 .provider-item {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-surface);
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 8px;
@@ -209,16 +209,16 @@ onUnmounted(() => {
   border-radius: 4px;
 }
 .provider-badge.ok {
-  background: rgba(52, 199, 89, 0.2);
-  color: #34c759;
+  background: var(--success-bg);
+  color: var(--success-text);
 }
 .provider-badge.unconfigured {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.5);
+  background: var(--bg-surface-hover);
+  color: var(--text-muted);
 }
 .provider-badge.error {
-  background: rgba(255, 59, 48, 0.2);
-  color: #ff3b30;
+  background: var(--danger-bg);
+  color: var(--danger-text);
 }
 .token-input-group {
   display: flex;
@@ -228,19 +228,19 @@ onUnmounted(() => {
 .token-input {
   flex: 1;
   padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
   border-radius: 4px;
-  color: #e0e0e0;
+  color: var(--text-primary);
   font-size: 13px;
 }
 .token-input:focus {
   outline: none;
-  border-color: #007aff;
+  border-color: var(--accent);
 }
 .btn-primary {
   padding: 6px 14px;
-  background: #007aff;
+  background: var(--accent);
   color: white;
   border: none;
   border-radius: 4px;
@@ -252,18 +252,15 @@ onUnmounted(() => {
 }
 .btn-test {
   padding: 4px 10px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #e0e0e0;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-hover);
+  color: var(--text-primary);
 }
 .btn-danger {
   padding: 4px 10px;
   background: none;
-  border: 1px solid rgba(255, 59, 48, 0.3);
-  color: #ff3b30;
+  border: 1px solid var(--danger-border);
+  color: var(--danger-text);
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
@@ -278,7 +275,7 @@ onUnmounted(() => {
 .token-masked {
   font-family: monospace;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
 }
 .provider-actions {
   margin-top: 4px;
@@ -287,7 +284,7 @@ onUnmounted(() => {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--icon-bg);
   display: inline-flex;
   align-items: center;
   justify-content: center;

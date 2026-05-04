@@ -1,3 +1,4 @@
+import "./styles/themes.css";
 import { createApp } from "vue";
 import Popover from "./popover/Popover.vue";
 

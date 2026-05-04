@@ -17,7 +17,7 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  color: #e0e0e0;
+  color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
 }
 </style>

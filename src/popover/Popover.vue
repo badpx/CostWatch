@@ -110,15 +110,15 @@ onUnmounted(() => {
 .popover-container {
   width: 100%;
   height: 100%;
-  background: rgba(40, 40, 40, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-popover);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  color: #e0e0e0;
+  color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   padding: 14px;
   box-sizing: border-box;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -134,14 +134,14 @@ onUnmounted(() => {
 .popover-title {
   font-size: 15px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-heading);
   margin: 0;
   letter-spacing: -0.2px;
 }
 .refresh-btn {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-size: 16px;
   cursor: pointer;
   padding: 2px 4px;
@@ -149,9 +149,7 @@ onUnmounted(() => {
   transition: color 0.15s ease;
 }
 .refresh-btn:hover {
-  color: #ffffff;
-}
-.refresh-btn.spinning {
+  color: var(--text-heading);
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin {
@@ -172,7 +170,7 @@ onUnmounted(() => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-tertiary);
   font-size: 13px;
 }
 .empty-state .btn-primary {
@@ -180,7 +178,7 @@ onUnmounted(() => {
 }
 .btn-primary {
   padding: 5px 14px;
-  background: #007aff;
+  background: var(--accent);
   color: white;
   border: none;
   border-radius: 5px;
@@ -190,7 +188,7 @@ onUnmounted(() => {
   transition: background 0.15s ease;
 }
 .btn-primary:hover {
-  background: #3395ff;
+  background: var(--accent-hover);
 }
 .popover-footer {
   display: flex;
@@ -198,18 +196,18 @@ onUnmounted(() => {
   align-items: center;
   margin-top: 6px;
   padding-top: 6px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--border);
   user-select: none;
   flex-shrink: 0;
 }
 .auto-refresh {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-tertiary);
 }
 .settings-btn {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-tertiary);
   font-size: 22px;
   cursor: pointer;
   padding: 4px 6px;
@@ -217,6 +215,6 @@ onUnmounted(() => {
   transition: color 0.15s ease;
 }
 .settings-btn:hover {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-primary);
 }
 </style>

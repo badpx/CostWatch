@@ -38,30 +38,30 @@ const tabs = [
   width: 100%;
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
-  background: #1e1e1e;
-  color: #e0e0e0;
+  background: var(--bg-app);
+  color: var(--text-primary);
 }
 .settings-tabs {
   display: flex;
   gap: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-strong);
   padding: 0 16px;
 }
 .tab-btn {
   padding: 10px 20px;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-size: 14px;
   cursor: pointer;
   border-bottom: 2px solid transparent;
 }
 .tab-btn.active {
-  color: #ffffff;
-  border-bottom-color: #007aff;
+  color: var(--text-heading);
+  border-bottom-color: var(--accent);
 }
 .tab-btn:hover {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-primary);
 }
 .settings-content {
   padding: 16px;
