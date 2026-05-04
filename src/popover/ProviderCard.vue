@@ -202,6 +202,7 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
   height: 7px;
   border-radius: 50%;
   display: inline-block;
+  vertical-align: middle;
 }
 .status-dot.ok {
   background: var(--success);

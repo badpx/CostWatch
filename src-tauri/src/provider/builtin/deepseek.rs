@@ -31,7 +31,7 @@ response:
 display:
   primary: available
   secondary: granted
-  label: "{{available}} {{currency_unit}}"
+  label: "{{currency_unit}}{{available}}"
   unit:
     field: currency
     map:
