@@ -8,7 +8,7 @@ use tauri_plugin_autostart::ManagerExt as AutostartExt;
 #[tauri::command]
 pub async fn get_providers(state: tauri::State<'_, AppState>) -> Result<Vec<ProviderState>, String> {
     let mut providers = state.providers.lock().unwrap().clone();
-    providers.sort_by(|a, b| b.has_token.cmp(&a.has_token));
+    providers.sort_by(|a, b| b.has_token.cmp(&a.has_token).then(a.name.cmp(&b.name)));
     Ok(providers)
 }
 

@@ -167,8 +167,11 @@ onUnmounted(() => {
   min-height: 0;
 }
 .empty-state {
-  text-align: center;
-  padding: 20px 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   color: rgba(255, 255, 255, 0.35);
   font-size: 13px;
 }
