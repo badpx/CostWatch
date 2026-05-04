@@ -29,6 +29,8 @@
   --success-text: #34c759;
 
   --warning: #ff9f0a;
+  --warning-text: #ff9f0a;
+  --warning-border: rgba(255, 159, 10, 0.25);
 
   --danger: #ff453a;
   --danger-text: #ff3b30;

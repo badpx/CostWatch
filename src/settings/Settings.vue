@@ -19,10 +19,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import ProviderConfig from "./ProviderConfig.vue";
 import PluginManager from "./PluginManager.vue";
 import GeneralSettings from "./GeneralSettings.vue";
+import { listen } from "@tauri-apps/api/event";
 
 const activeTab = ref("providers");
 
@@ -31,6 +32,22 @@ const tabs = [
   { id: "plugins", label: "插件管理" },
   { id: "general", label: "通用" },
 ];
+
+let unlisten: (() => void) | null = null;
+
+onMounted(() => {
+  listen<{ tab: string }>("navigate-to-tab", (event) => {
+    if (tabs.some((t) => t.id === event.payload.tab)) {
+      activeTab.value = event.payload.tab;
+    }
+  }).then((fn) => {
+    unlisten = fn;
+  });
+});
+
+onUnmounted(() => {
+  if (unlisten) unlisten();
+});
 </script>
 
 <style scoped>

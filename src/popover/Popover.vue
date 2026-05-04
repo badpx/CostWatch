@@ -21,14 +21,14 @@
       </template>
       <template v-else>
         <ProviderCard
-          v-for="provider in providers"
+          v-for="provider in configuredProviders"
           :key="provider.id"
           :provider="provider"
           @retry="refreshProvider"
           @open-settings="openSettings"
         />
 
-        <div v-if="providers.length === 0" class="empty-state">
+        <div v-if="configuredProviders.length === 0" class="empty-state">
           <p>暂无配置提供商</p>
           <button class="btn-primary" @click="openSettings">
             打开设置
@@ -47,12 +47,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from "vue";
+import { onMounted, onUnmounted, computed } from "vue";
 import ProviderCard from "./ProviderCard.vue";
 import { useProviders } from "../composables/useProviders";
 import { useSettings } from "../composables/useSettings";
 import { getAllWebviewWindows } from "@tauri-apps/api/webviewWindow";
 import { listen } from "@tauri-apps/api/event";
+import { emit } from "@tauri-apps/api/event";
 
 const {
   providers,
@@ -67,10 +68,15 @@ const {
 
 const { settings, loadSettings } = useSettings();
 
+const configuredProviders = computed(() =>
+  providers.value.filter((p) => p.has_token)
+);
+
 async function openSettings() {
   const windows = await getAllWebviewWindows();
   const settingsWindow = windows.find((w: { label: string }) => w.label === "settings");
   if (settingsWindow) {
+    await emit("navigate-to-tab", { tab: "providers" });
     await settingsWindow.show();
     await settingsWindow.setFocus();
   }

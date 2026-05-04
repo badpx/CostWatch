@@ -197,14 +197,81 @@ pub async fn refresh_all(state: tauri::State<'_, AppState>) -> Result<(), String
 }
 
 #[tauri::command]
-pub async fn import_plugin(yaml_path: String) -> Result<ProviderConfig, String> {
-    let (_id, config) = plugin::import_plugin(&yaml_path)?;
+pub async fn import_plugin(
+    yaml_path: String,
+    app: tauri::AppHandle,
+    state: tauri::State<'_, AppState>,
+) -> Result<ProviderConfig, String> {
+    let (id, config) = plugin::import_plugin(&yaml_path)?;
+
+    let is_builtin = false;
+    let tokens = crate::storage::load_tokens().unwrap_or_default();
+    let has_token = tokens.providers.contains_key(&id);
+
+    let new_provider = ProviderState {
+        id: id.clone(),
+        name: config.name.clone(),
+        icon: ProviderIcon::Custom(config.icon.clone()),
+        is_builtin,
+        balance: None,
+        used: None,
+        available: None,
+        currency: Currency::default(),
+        is_available: None,
+        extra_fields: Default::default(),
+        display_label: None,
+        has_token,
+        has_progress: config.display.progress.is_some(),
+        status: if has_token {
+            ProviderStatus::Fetching
+        } else {
+            ProviderStatus::Unconfigured
+        },
+        last_updated: None,
+        error_message: None,
+    };
+
+    state.configs.lock().unwrap().insert(id.clone(), config.clone());
+
+    let mut providers = state.providers.lock().unwrap();
+    if let Some(existing) = providers.iter_mut().find(|p| p.id == id) {
+        existing.name = config.name.clone();
+        existing.icon = ProviderIcon::Custom(config.icon.clone());
+        existing.has_progress = config.display.progress.is_some();
+        existing.balance = None;
+        existing.used = None;
+        existing.available = None;
+        existing.display_label = None;
+        existing.status = if has_token { ProviderStatus::Fetching } else { ProviderStatus::Unconfigured };
+        existing.last_updated = None;
+        existing.error_message = None;
+    } else {
+        providers.push(new_provider);
+    }
+    drop(providers);
+
+    let _ = app.emit("providers-updated", ());
+
     Ok(config)
 }
 
 #[tauri::command]
-pub async fn remove_plugin(provider_id: String) -> Result<(), String> {
-    plugin::remove_plugin(&provider_id)
+pub async fn remove_plugin(
+    provider_id: String,
+    app: tauri::AppHandle,
+    state: tauri::State<'_, AppState>,
+) -> Result<(), String> {
+    plugin::remove_plugin(&provider_id)?;
+
+    let _ = crate::storage::delete_token(&provider_id);
+
+    state.configs.lock().unwrap().remove(&provider_id);
+    let mut providers = state.providers.lock().unwrap();
+    providers.retain(|p| p.id != provider_id);
+
+    let _ = app.emit("providers-updated", ());
+
+    Ok(())
 }
 
 #[tauri::command]

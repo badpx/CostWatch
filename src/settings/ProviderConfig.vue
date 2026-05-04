@@ -31,7 +31,7 @@
           <button class="btn-test" @click="testConnection(provider.id)">
             测试
           </button>
-          <button class="btn-danger" @click="deleteToken(provider.id)">
+          <button class="btn-warning" @click="deleteToken(provider.id)">
             删除Token
           </button>
         </template>
@@ -261,6 +261,15 @@ onUnmounted(() => {
   background: none;
   border: 1px solid var(--danger-border);
   color: var(--danger-text);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.btn-warning {
+  padding: 4px 10px;
+  background: none;
+  border: 1px solid var(--warning-border);
+  color: var(--warning-text);
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
