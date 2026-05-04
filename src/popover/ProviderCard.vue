@@ -77,16 +77,12 @@ function getIconKey(icon: ProviderState["icon"]): string {
 const iconKey = computed(() => getIconKey(props.provider.icon));
 
 const lobehubMap: Record<string, string> = {
-  openrouter: "OpenRouter",
-  deepseek: "DeepSeek",
-  deepinfra: "Deepinfra",
-  runware: "Runware",
-  kimi: "Moonshot",
+  deepinfra: "deepinfra",
+  runware: "runware",
 };
 
 function getLobeHubUrl(key: string): string {
-  const name = lobehubMap[key];
-  if (!name) return "";
+  const name = lobehubMap[key] || key;
   return `https://unpkg.com/@lobehub/icons-static-svg/icons/${name}.svg`;
 }
 
@@ -95,8 +91,7 @@ const iconSrc = ref("");
 watch(
   iconKey,
   (key) => {
-    const lobehub = getLobeHubUrl(key);
-    iconSrc.value = lobehub || `/icons/${key}.svg`;
+    iconSrc.value = getLobeHubUrl(key);
   },
   { immediate: true }
 );
