@@ -2,13 +2,14 @@
   <div class="provider-card" :class="{ error: isError, unconfigured: isUnconfigured }">
     <div class="provider-header">
       <span class="provider-name">
-        <img
-          v-if="iconKey"
-          class="provider-icon"
-          :src="iconSrc"
-          @error="onIconError"
-          alt=""
-        />
+        <span v-if="iconKey" class="provider-icon-wrap">
+          <img
+            class="provider-icon"
+            :src="iconSrc"
+            @error="onIconError"
+            alt=""
+          />
+        </span>
         {{ provider.name }}
       </span>
       <span class="provider-status">
@@ -78,13 +79,15 @@ const iconKey = computed(() => getIconKey(props.provider.icon));
 const lobehubMap: Record<string, string> = {
   openrouter: "OpenRouter",
   deepseek: "DeepSeek",
+  deepinfra: "Deepinfra",
+  runware: "Runware",
   kimi: "Moonshot",
 };
 
 function getLobeHubUrl(key: string): string {
   const name = lobehubMap[key];
   if (!name) return "";
-  return `https://unpkg.com/@lobehub/icons-static-svg/icons/${name}.Avatar.svg`;
+  return `https://unpkg.com/@lobehub/icons-static-svg/icons/${name}.svg`;
 }
 
 const iconSrc = ref("");
@@ -216,12 +219,21 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
   align-items: center;
   gap: 6px;
 }
-.provider-icon {
-  width: 14px;
-  height: 14px;
+.provider-icon-wrap {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
+}
+.provider-icon {
+  width: 12px;
+  height: 12px;
   object-fit: contain;
-  filter: brightness(0.8);
 }
 .status-dot {
   width: 7px;
