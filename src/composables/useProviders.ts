@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import type { ProviderState } from "../types";
 
 const providers = ref<ProviderState[]>([]);
+const initialized = ref(false);
 let refreshInterval: ReturnType<typeof setInterval> | null = null;
 
 export function useProviders() {
@@ -14,6 +15,8 @@ export function useProviders() {
       providers.value = await invoke<ProviderState[]>("get_providers");
     } catch (e) {
       error.value = String(e);
+    } finally {
+      initialized.value = true;
     }
   }
 
@@ -59,6 +62,7 @@ export function useProviders() {
 
   return {
     providers,
+    initialized,
     loading,
     error,
     fetchProviders,

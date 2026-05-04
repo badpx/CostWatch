@@ -14,20 +14,27 @@
     </div>
 
     <div class="providers-list">
-      <ProviderCard
-        v-for="provider in providers"
-        :key="provider.id"
-        :provider="provider"
-        @retry="refreshProvider"
-        @open-settings="openSettings"
-      />
+      <template v-if="!initialized">
+        <div class="empty-state">
+          <p>正在获取额度信息…</p>
+        </div>
+      </template>
+      <template v-else>
+        <ProviderCard
+          v-for="provider in providers"
+          :key="provider.id"
+          :provider="provider"
+          @retry="refreshProvider"
+          @open-settings="openSettings"
+        />
 
-      <div v-if="providers.length === 0" class="empty-state">
-        <p>暂无配置提供商</p>
-        <button class="btn-primary" @click="openSettings">
-          打开设置
-        </button>
-      </div>
+        <div v-if="providers.length === 0" class="empty-state">
+          <p>暂无配置提供商</p>
+          <button class="btn-primary" @click="openSettings">
+            打开设置
+          </button>
+        </div>
+      </template>
     </div>
 
     <div class="popover-footer">
@@ -49,6 +56,7 @@ import { listen } from "@tauri-apps/api/event";
 
 const {
   providers,
+  initialized,
   loading,
   fetchProviders,
   refreshAll,
