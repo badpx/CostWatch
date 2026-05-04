@@ -75,15 +75,35 @@ function getIconKey(icon: ProviderState["icon"]): string {
 
 const iconKey = computed(() => getIconKey(props.provider.icon));
 
-const iconSrc = ref(`/icons/${iconKey.value}.svg`);
+const lobehubMap: Record<string, string> = {
+  openrouter: "OpenRouter",
+  deepseek: "DeepSeek",
+  kimi: "Moonshot",
+};
 
-watch(iconKey, (key) => {
-  iconSrc.value = `/icons/${key}.svg`;
-});
+function getLobeHubUrl(key: string): string {
+  const name = lobehubMap[key];
+  if (!name) return "";
+  return `https://unpkg.com/@lobehub/icons-static-svg/icons/${name}.svg`;
+}
+
+const iconSrc = ref("");
+
+watch(
+  iconKey,
+  (key) => {
+    const lobehub = getLobeHubUrl(key);
+    iconSrc.value = lobehub || `/icons/${key}.svg`;
+  },
+  { immediate: true }
+);
 
 function onIconError(event: Event) {
   const img = event.target as HTMLImageElement;
-  if (img.src.endsWith(".svg")) {
+  const key = iconKey.value;
+  if (img.src.startsWith("https://unpkg.com")) {
+    img.src = `/icons/${key}.svg`;
+  } else if (img.src.endsWith(".svg")) {
     img.src = img.src.replace(/\.svg$/, ".png");
   }
 }
