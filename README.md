@@ -2,7 +2,7 @@
 
 macOS menu bar app for monitoring LLM API usage and balance. Click the tray icon to see provider balances in a popover, or open settings to configure API tokens and manage plugins.
 
-Built-in support for **OpenRouter** and **DeepSeek**. Additional providers can be added via declarative YAML plugins.
+Built-in support for **OpenRouter**, **DeepSeek**, **DeepInfra**, **Runware**, and **Kimi (Moonshot)**. Additional providers can be added via declarative YAML plugins.
 
 ## Tech Stack
 
@@ -53,8 +53,8 @@ cargo test --manifest-path src-tauri/Cargo.toml
 
 CostWatch is a two-window Tauri v2 app:
 
-- **Popover** (308×282, transparent, no decorations) — appears near the tray icon on click, shows provider balances with auto-refresh
-- **Settings** (600×500, standard window) — token configuration, plugin management, general settings
+- **Popover** (308×350, transparent, no decorations) — appears near the tray icon on click, shows provider balances with auto-refresh
+- **Settings** (640×480, standard window) — token configuration, plugin management, general settings
 
 Each window has its own HTML entry (`popover.html`, `settings.html`) and Vue entry (`main-popover.ts`, `main-settings.ts`).
 
@@ -155,4 +155,4 @@ Key YAML features:
 
 ## License
 
-Private — All rights reserved.
+MIT
