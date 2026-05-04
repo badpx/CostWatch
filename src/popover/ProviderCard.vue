@@ -1,7 +1,16 @@
 <template>
   <div class="provider-card" :class="{ error: isError, unconfigured: isUnconfigured }">
     <div class="provider-header">
-      <span class="provider-name">{{ provider.name }}</span>
+      <span class="provider-name">
+        <img
+          v-if="iconKey"
+          class="provider-icon"
+          :src="iconSrc"
+          @error="onIconError"
+          alt=""
+        />
+        {{ provider.name }}
+      </span>
       <span class="provider-status">
         <template v-if="statusLabel === 'Ok'">
           <span class="status-dot ok"></span>
@@ -46,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from "vue";
+import { computed, ref, onMounted, onUnmounted, watch } from "vue";
 import type { ProviderState } from "../types";
 
 const props = defineProps<{
@@ -57,6 +66,27 @@ defineEmits<{
   openSettings: [];
   retry: [id: string];
 }>();
+
+function getIconKey(icon: ProviderState["icon"]): string {
+  if (typeof icon === "object" && "Builtin" in icon) return icon.Builtin;
+  if (typeof icon === "object" && "Custom" in icon) return icon.Custom;
+  return "";
+}
+
+const iconKey = computed(() => getIconKey(props.provider.icon));
+
+const iconSrc = ref(`/icons/${iconKey.value}.svg`);
+
+watch(iconKey, (key) => {
+  iconSrc.value = `/icons/${key}.svg`;
+});
+
+function onIconError(event: Event) {
+  const img = event.target as HTMLImageElement;
+  if (img.src.endsWith(".svg")) {
+    img.src = img.src.replace(/\.svg$/, ".png");
+  }
+}
 
 const statusLabel = computed(() => {
   if (typeof props.provider.status === "string") return props.provider.status;
@@ -162,6 +192,16 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
   font-size: 13px;
   color: #f0f0f0;
   letter-spacing: -0.1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.provider-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  object-fit: contain;
+  filter: brightness(0.8);
 }
 .status-dot {
   width: 7px;
