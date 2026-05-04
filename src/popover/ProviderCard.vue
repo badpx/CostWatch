@@ -28,7 +28,7 @@
       </div>
       <div class="provider-meta">
         <span v-if="provider.last_updated" class="last-updated">
-          {{ timeAgo(provider.last_updated) }}
+          {{ timeAgo }}
         </span>
       </div>
     </template>
@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, onMounted, onUnmounted } from "vue";
 import type { ProviderState } from "../types";
 
 const props = defineProps<{
@@ -102,23 +102,35 @@ const progressPercent = computed(() => {
 
 const progressDirection = computed(() => "consumption");
 
+const now = ref(Date.now());
+let timer: ReturnType<typeof setInterval> | null = null;
+
+onMounted(() => {
+  timer = setInterval(() => { now.value = Date.now(); }, 60000);
+});
+
+onUnmounted(() => {
+  if (timer) { clearInterval(timer); timer = null; }
+});
+
+const timeAgo = computed(() => {
+  const dateStr = props.provider.last_updated;
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  const seconds = Math.floor((now.value - date.getTime()) / 1000);
+  if (seconds < 60) return "";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}分钟前`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours}小时前`;
+});
+
 function getCurrencySymbol(currency: ProviderState["currency"]): string {
   if (typeof currency === "string") {
     return currency === "USD" ? "$" : currency === "CNY" ? "¥" : currency === "EUR" ? "€" : "";
   }
   if (typeof currency === "object" && "Custom" in currency) return currency.Custom;
   return "";
-}
-
-function timeAgo(dateStr: string | null): string {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (seconds < 60) return `${seconds}秒前`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}分钟前`;
-  const hours = Math.floor(minutes / 60);
-  return `${hours}小时前`;
 }
 </script>
 
