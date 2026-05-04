@@ -1,7 +1,7 @@
 <template>
   <div class="popover-container">
     <div class="popover-header">
-      <h1 class="popover-title">CostWatch</h1>
+      <h1 class="popover-title">CostWatch <span class="version-badge">v{{ version }}</span></h1>
       <button
         v-if="!loading"
         class="refresh-btn"
@@ -47,13 +47,15 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, computed } from "vue";
+import { onMounted, onUnmounted, computed, ref } from "vue";
 import ProviderCard from "./ProviderCard.vue";
 import { useProviders } from "../composables/useProviders";
 import { useSettings } from "../composables/useSettings";
 import { getAllWebviewWindows } from "@tauri-apps/api/webviewWindow";
-import { listen } from "@tauri-apps/api/event";
-import { emit } from "@tauri-apps/api/event";
+import { listen, emit } from "@tauri-apps/api/event";
+import { getVersion } from "@tauri-apps/api/app";
+
+const version = ref("");
 
 const {
   providers,
@@ -86,6 +88,7 @@ let unlistenSettings: (() => void) | null = null;
 let unlistenProviders: (() => void) | null = null;
 
 onMounted(async () => {
+  version.value = await getVersion();
   await loadSettings();
   startAutoRefresh(settings.value.refresh_interval_secs * 1000);
 
@@ -143,6 +146,14 @@ onUnmounted(() => {
   color: var(--text-heading);
   margin: 0;
   letter-spacing: -0.2px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.version-badge {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-tertiary);
 }
 .refresh-btn {
   background: none;

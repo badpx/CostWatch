@@ -39,6 +39,7 @@
           <div class="token-input-group">
             <input
               v-model="tokenInputs[provider.id]"
+              @input="stripSpaces(provider.id)"
               :type="showToken[provider.id] ? 'text' : 'password'"
               class="token-input"
               placeholder="输入 API Token"
@@ -120,6 +121,13 @@ function statusText(provider: ProviderState): string {
 
 function toggleTokenVisibility(id: string) {
   showToken.value[id] = !showToken.value[id];
+}
+
+function stripSpaces(id: string) {
+  const val = tokenInputs.value[id];
+  if (val) {
+    tokenInputs.value[id] = val.replace(/\s/g, "");
+  }
 }
 
 async function saveToken(id: string) {
