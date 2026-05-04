@@ -49,7 +49,8 @@ onMounted(loadSettings);
 
 <style scoped>
 .general-settings {
-  max-width: 400px;
+  max-width: 480px;
+  margin: 0 auto;
 }
 .section-title {
   font-size: 14px;

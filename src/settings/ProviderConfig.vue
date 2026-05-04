@@ -175,7 +175,7 @@ onUnmounted(() => {
 
 <style scoped>
 .provider-config {
-  max-width: 560px;
+  max-width: 600px;
 }
 .section-title {
   font-size: 14px;

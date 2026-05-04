@@ -39,7 +39,7 @@
 
     <div class="popover-footer">
       <span class="auto-refresh">
-        自动刷新 @ {{ settings.refresh_interval_secs }}s
+        每 {{ settings.refresh_interval_secs }} 秒自动刷新
       </span>
       <button class="settings-btn" @click="openSettings">⚙</button>
     </div>

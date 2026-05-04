@@ -134,7 +134,8 @@ onMounted(refreshData);
 
 <style scoped>
 .plugin-manager {
-  max-width: 560px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 .section-title {
   font-size: 14px;
