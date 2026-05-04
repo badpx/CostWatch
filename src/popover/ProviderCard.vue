@@ -56,8 +56,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted, watch } from "vue";
+import { computed, ref, onMounted, onUnmounted } from "vue";
 import type { ProviderState } from "../types";
+import { useProviderIcon } from "../composables/useProviderIcon";
 
 const props = defineProps<{
   provider: ProviderState;
@@ -68,43 +69,9 @@ defineEmits<{
   retry: [id: string];
 }>();
 
-function getIconKey(icon: ProviderState["icon"]): string {
-  if (typeof icon === "object" && "Builtin" in icon) return icon.Builtin;
-  if (typeof icon === "object" && "Custom" in icon) return icon.Custom;
-  return "";
-}
-
-const iconKey = computed(() => getIconKey(props.provider.icon));
-
-const lobehubMap: Record<string, string> = {
-  deepinfra: "deepinfra",
-  runware: "runware",
-};
-
-function getLobeHubUrl(key: string): string {
-  const name = lobehubMap[key] || key;
-  return `https://unpkg.com/@lobehub/icons-static-svg/icons/${name}.svg`;
-}
-
-const iconSrc = ref("");
-
-watch(
-  iconKey,
-  (key) => {
-    iconSrc.value = getLobeHubUrl(key);
-  },
-  { immediate: true }
+const { iconKey, iconSrc, onIconError } = useProviderIcon(
+  computed(() => props.provider.icon)
 );
-
-function onIconError(event: Event) {
-  const img = event.target as HTMLImageElement;
-  const key = iconKey.value;
-  if (img.src.startsWith("https://unpkg.com")) {
-    img.src = `/icons/${key}.svg`;
-  } else if (img.src.endsWith(".svg")) {
-    img.src = img.src.replace(/\.svg$/, ".png");
-  }
-}
 
 const statusLabel = computed(() => {
   if (typeof props.provider.status === "string") return props.provider.status;

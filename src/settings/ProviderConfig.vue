@@ -7,7 +7,18 @@
       class="provider-item"
     >
       <div class="provider-info">
-        <span class="provider-name">{{ provider.name }}</span>
+        <span class="provider-name">
+          <span class="provider-icon-wrap">
+            <img
+              class="provider-icon"
+              :src="iconSrc(provider)"
+              :data-key="iconKey(provider)"
+              @error="onIconError"
+              alt=""
+            />
+          </span>
+          {{ provider.name }}
+        </span>
         <span :class="['provider-badge', statusClass(provider)]">
           {{ statusText(provider) }}
         </span>
@@ -55,6 +66,27 @@ import { invoke } from "@tauri-apps/api/core";
 import { ask } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
 import type { ProviderState } from "../types";
+import { getIconUrl } from "../composables/useProviderIcon";
+
+function iconKey(provider: ProviderState): string {
+  if (typeof provider.icon === "object" && "Builtin" in provider.icon) return provider.icon.Builtin;
+  if (typeof provider.icon === "object" && "Custom" in provider.icon) return provider.icon.Custom;
+  return "";
+}
+
+function iconSrc(provider: ProviderState): string {
+  return getIconUrl(iconKey(provider));
+}
+
+function onIconError(event: Event) {
+  const img = event.target as HTMLImageElement;
+  const key = (img.dataset.key as string) || "";
+  if (img.src.startsWith("https://unpkg.com")) {
+    img.src = `/icons/${key}.svg`;
+  } else if (img.src.endsWith(".svg")) {
+    img.src = img.src.replace(/\.svg$/, ".png");
+  }
+}
 
 const providers = ref<ProviderState[]>([]);
 const tokenInputs = ref<Record<string, string>>({});
@@ -168,6 +200,8 @@ onUnmounted(() => {
 .provider-name {
   font-weight: 600;
   font-size: 15px;
+  display: flex;
+  align-items: center;
 }
 .provider-badge {
   font-size: 12px;
@@ -248,5 +282,23 @@ onUnmounted(() => {
 }
 .provider-actions {
   margin-top: 4px;
+}
+.provider-icon-wrap {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.provider-icon {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
 }
 </style>
