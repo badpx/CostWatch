@@ -3,6 +3,7 @@ use crate::provider::plugin;
 use crate::provider::types::*;
 use crate::state::AppState;
 use tauri::Emitter;
+use tauri_plugin_autostart::ManagerExt as AutostartExt;
 
 #[tauri::command]
 pub async fn get_providers(state: tauri::State<'_, AppState>) -> Result<Vec<ProviderState>, String> {
@@ -217,6 +218,11 @@ pub async fn save_settings(
     state: tauri::State<'_, AppState>,
     settings: GeneralSettings,
 ) -> Result<(), String> {
+    if settings.launch_at_login {
+        let _ = app.autolaunch().enable();
+    } else {
+        let _ = app.autolaunch().disable();
+    }
     crate::storage::save_settings(&settings)?;
     *state.settings.lock().unwrap() = settings;
     let _ = app.emit("settings-updated", ());

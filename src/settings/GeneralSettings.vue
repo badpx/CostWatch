@@ -4,7 +4,7 @@
 
     <div class="setting-item">
       <label class="setting-label">刷新间隔</label>
-      <select v-model="localSettings.refresh_interval_secs" class="setting-select">
+      <select v-model="localSettings.refresh_interval_secs" @change="save" class="setting-select">
         <option :value="60">1 分钟</option>
         <option :value="120">2 分钟</option>
         <option :value="180">3 分钟</option>
@@ -19,11 +19,10 @@
       <input
         type="checkbox"
         v-model="localSettings.launch_at_login"
+        @change="save"
         class="setting-checkbox"
       />
     </div>
-
-    <button class="btn-primary" @click="save">保存设置</button>
   </div>
 </template>
 
@@ -43,7 +42,6 @@ async function loadSettings() {
 
 async function save() {
   await invoke("save_settings", { settings: localSettings.value });
-  alert("设置已保存");
 }
 
 onMounted(loadSettings);
@@ -83,15 +81,5 @@ onMounted(loadSettings);
 .setting-checkbox {
   width: 18px;
   height: 18px;
-}
-.btn-primary {
-  margin-top: 16px;
-  padding: 8px 20px;
-  background: #007aff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
 }
 </style>

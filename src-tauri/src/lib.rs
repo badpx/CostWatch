@@ -10,6 +10,7 @@ use provider::types::{Currency, ProviderIcon, ProviderState, ProviderStatus};
 use state::AppState;
 use tauri::Emitter;
 use tauri::Manager;
+use tauri_plugin_autostart::ManagerExt as AutostartExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -17,11 +18,21 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_positioner::init())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
         .manage(AppState::default())
         .setup(|app| {
             storage::ensure_dirs()?;
 
             let settings = storage::load_settings().unwrap_or_default();
+
+            if settings.launch_at_login {
+                let _ = app.autolaunch().enable();
+            } else {
+                let _ = app.autolaunch().disable();
+            }
 
             let mut registry = ProviderRegistry::new();
             for (id, config) in provider::builtin::all_builtin_configs() {
