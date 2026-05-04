@@ -57,12 +57,16 @@ onUnmounted(() => {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
   background: var(--bg-app);
   color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 .settings-tabs {
   display: flex;
   gap: 0;
   border-bottom: 1px solid var(--border-strong);
   padding: 0 16px;
+  flex-shrink: 0;
 }
 .tab-btn {
   padding: 10px 20px;
@@ -82,5 +86,8 @@ onUnmounted(() => {
 }
 .settings-content {
   padding: 16px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 </style>

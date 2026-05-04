@@ -69,11 +69,11 @@
     </div>
 
     <div class="import-section">
-      <button class="btn-primary" @click="importPlugin">
-        + 导入插件配置文件
-      </button>
       <button class="btn-link" @click="showGuide = !showGuide">
         {{ showGuide ? '收起说明' : '查看示例配置' }}
+      </button>
+      <button class="btn-primary" @click="importPlugin">
+        + 导入插件配置文件
       </button>
     </div>
 
@@ -243,6 +243,12 @@ async function importPlugin() {
         : `成功导入插件：${config.name}`
     );
     await refreshData();
+    const newId = `plugin-${config.name.toLowerCase().replace(/ /g, "-")}`;
+    const freshProvider = providers.value.find((p) => p.id === newId);
+    if (freshProvider?.has_token) {
+      await invoke("refresh_provider", { providerId: newId }).catch(() => {});
+      await refreshData();
+    }
   } catch (e) {
     alert(`导入失败: ${e}`);
   }
@@ -430,6 +436,7 @@ onUnmounted(() => {
   display: flex;
   gap: 12px;
   align-items: center;
+  justify-content: flex-end;
 }
 .btn-link {
   background: none;

@@ -121,6 +121,7 @@ pub async fn test_connection(
 #[tauri::command]
 pub async fn refresh_provider(
     state: tauri::State<'_, AppState>,
+    app: tauri::AppHandle,
     provider_id: String,
 ) -> Result<ProviderState, String> {
     let config = state
@@ -144,6 +145,7 @@ pub async fn refresh_provider(
     }
     drop(providers);
 
+    let _ = app.emit("providers-updated", ());
     Ok(result)
 }
 
