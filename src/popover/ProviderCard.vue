@@ -84,7 +84,7 @@ const lobehubMap: Record<string, string> = {
 function getLobeHubUrl(key: string): string {
   const name = lobehubMap[key];
   if (!name) return "";
-  return `https://unpkg.com/@lobehub/icons-static-svg/icons/${name}.svg`;
+  return `https://unpkg.com/@lobehub/icons-static-svg/icons/${name}.Avatar.svg`;
 }
 
 const iconSrc = ref("");
