@@ -10,6 +10,7 @@ import type { HistoryPoint } from "../types";
 
 const props = defineProps<{
   dataPoints: HistoryPoint[];
+  range: string;
 }>();
 
 const containerRef = ref<HTMLDivElement>();
@@ -45,14 +46,17 @@ function draw() {
   const padY = 10;
   const chartH = h - padY * 2;
 
-  // Time-based X axis: map timestamps to proportional positions
+  // Time-based X axis: anchor to the selected time range
   const timestamps = points.map((p) => new Date(p.recorded_at).getTime());
-  const tMin = Math.min(...timestamps);
-  const tMax = Math.max(...timestamps);
+  const tMax = Date.now();
+  const tMin = tMax - rangeToMs(props.range);
   const tRange = tMax - tMin || 1;
 
-  const toX = (i: number) =>
-    points.length === 1 ? w / 2 : ((timestamps[i] - tMin) / tRange) * w;
+  const toX = (i: number) => {
+    if (points.length === 1) return w / 2;
+    const x = ((timestamps[i] - tMin) / tRange) * w;
+    return Math.max(0, Math.min(w, x));
+  };
   const toY = (v: number) =>
     padY + chartH - ((v - minVal) / range) * chartH;
 
@@ -99,7 +103,8 @@ function draw() {
       areaPath += ` L${x},${y}`;
     }
   }
-  areaPath += ` L${toX(points.length - 1)},${h} L0,${h} Z`;
+  const lastX = toX(points.length - 1);
+  areaPath += ` L${lastX},${h} L${toX(0)},${h} Z`;
 
   const gradient = ctx.createLinearGradient(0, padY, 0, h);
   gradient.addColorStop(0, "rgba(68, 170, 153, 0.22)");
@@ -116,6 +121,15 @@ function draw() {
   ctx.stroke(new Path2D(linePath));
 }
 
+function rangeToMs(range: string): number {
+  switch (range) {
+    case "24h": return 24 * 60 * 60 * 1000;
+    case "1w": return 7 * 24 * 60 * 60 * 1000;
+    case "1m": return 30 * 24 * 60 * 60 * 1000;
+    default: return 7 * 24 * 60 * 60 * 1000;
+  }
+}
+
 function formatVal(v: number): string {
   if (Math.abs(v) >= 1000) return `$${(v / 1000).toFixed(1)}k`;
   return `$${v.toFixed(v < 10 ? 2 : 0)}`;
@@ -126,7 +140,7 @@ onMounted(() => {
 });
 
 watch(
-  () => props.dataPoints,
+  [() => props.dataPoints, () => props.range],
   () => {
     nextTick(draw);
   },

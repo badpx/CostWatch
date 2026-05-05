@@ -37,7 +37,7 @@
             {{ r.label }}
           </button>
         </div>
-        <TrendChart :dataPoints="historyData[provider.id] || []" />
+        <TrendChart :dataPoints="historyData[provider.id] || []" :range="historyRange[provider.id] || currentRange" />
       </div>
       <div class="provider-actions">
         <template v-if="provider.has_token">
@@ -241,7 +241,6 @@ async function loadHistory(providerId: string, range: string) {
       providerId,
       range,
     });
-    console.log(`[history] ${providerId} range=${range} points=${points.length}`);
     historyData.value[providerId] = points;
     historyRange.value[providerId] = range;
   } catch (e) {
