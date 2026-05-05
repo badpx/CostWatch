@@ -24,7 +24,7 @@
         </span>
       </div>
       <div
-        v-if="provider.has_token && isStatusOk(provider) && hasHistoryData(provider.id)"
+        v-if="provider.has_token"
         class="trend-section"
       >
         <TrendChart :dataPoints="historyData[provider.id] || []" :range="trendRange" />
@@ -133,7 +133,7 @@ function balanceText(provider: ProviderState): string {
     const fmt = (v: number) => Number.isInteger(v) ? String(v) : v.toFixed(2);
     return `${currencySymbol}${fmt(Number(provider.available))}`;
   }
-  return "••••••••";
+  return "";
 }
 
 function getCurrencySymbol(currency: ProviderState["currency"]): string {
@@ -142,15 +142,6 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
   }
   if (typeof currency === "object" && "Custom" in currency) return currency.Custom;
   return "";
-}
-
-function isStatusOk(provider: ProviderState): boolean {
-  return typeof provider.status === "string" && provider.status === "Ok";
-}
-
-function hasHistoryData(providerId: string): boolean {
-  const data = historyData.value[providerId];
-  return !!data && data.length > 0;
 }
 
 async function loadHistory(providerId: string, range: string) {

@@ -36,15 +36,28 @@ function draw() {
   ctx.scale(dpr, dpr);
 
   const points = props.dataPoints;
+  const padY = 10;
+  const chartH = h - padY * 2;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Grid lines (always drawn, even as skeleton)
+  ctx.strokeStyle = "rgba(255,255,255,0.06)";
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(0, padY);
+  ctx.lineTo(w, padY);
+  ctx.moveTo(0, h - padY);
+  ctx.lineTo(w, h - padY);
+  ctx.stroke();
+
+  // Skeleton mode: no data to draw
   if (points.length === 0) return;
 
   const values = points.map((p) => p.value);
   const minVal = Math.min(...values);
   const maxVal = Math.max(...values);
   const range = maxVal - minVal || 1;
-
-  const padY = 10;
-  const chartH = h - padY * 2;
 
   // Time-based X axis: anchor to the selected time range
   // recorded_at is UTC from SQLite datetime('now'), append 'Z' for correct JS parsing
@@ -60,18 +73,6 @@ function draw() {
   };
   const toY = (v: number) =>
     padY + chartH - ((v - minVal) / range) * chartH;
-
-  ctx.clearRect(0, 0, w, h);
-
-  // Grid lines
-  ctx.strokeStyle = "rgba(255,255,255,0.06)";
-  ctx.lineWidth = 0.5;
-  ctx.beginPath();
-  ctx.moveTo(0, toY(minVal));
-  ctx.lineTo(w, toY(minVal));
-  ctx.moveTo(0, toY(maxVal));
-  ctx.lineTo(w, toY(maxVal));
-  ctx.stroke();
 
   // Y-axis labels
   ctx.fillStyle = "#666";
