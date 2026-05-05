@@ -154,7 +154,6 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
 
 const ranges = [
   { value: "24h", label: "24h" },
-  { value: "3d", label: "3d" },
   { value: "1w", label: "1w" },
   { value: "1m", label: "1m" },
 ];
