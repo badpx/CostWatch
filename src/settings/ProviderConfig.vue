@@ -217,7 +217,7 @@ async function testConnection(id: string) {
 async function refreshData() {
   providers.value = await invoke<ProviderState[]>("get_providers");
   for (const p of providers.value) {
-    if (p.has_token && typeof p.status === "string" && p.status === "Ok") {
+    if (p.has_token) {
       await loadHistory(p.id, trendRange.value);
     }
   }
@@ -238,7 +238,7 @@ onMounted(async () => {
 // Reload history when global trend range changes
 watch(trendRange, (newRange) => {
   for (const p of providers.value) {
-    if (p.has_token && typeof p.status === "string" && p.status === "Ok") {
+    if (p.has_token) {
       loadHistory(p.id, newRange);
     }
   }
