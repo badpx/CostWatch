@@ -54,6 +54,7 @@ import { useSettings } from "../composables/useSettings";
 import { getAllWebviewWindows } from "@tauri-apps/api/webviewWindow";
 import { listen, emit } from "@tauri-apps/api/event";
 import { getVersion } from "@tauri-apps/api/app";
+import i18n from "../i18n";
 
 const version = ref("");
 
@@ -94,6 +95,10 @@ onMounted(async () => {
 
   unlistenSettings = await listen("settings-updated", async () => {
     await loadSettings();
+    const lang = settings.value.language;
+    if (lang && (lang === "zh-CN" || lang === "en")) {
+      (i18n.global.locale as any).value = lang;
+    }
     startAutoRefresh(settings.value.refresh_interval_secs * 1000);
   });
 

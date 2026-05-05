@@ -38,7 +38,7 @@
 import { ref, onMounted } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import type { GeneralSettings } from "../types";
-import { setLocale } from "../composables/useLocale";
+import i18n from "../i18n";
 
 const localSettings = ref<GeneralSettings>({
   refresh_interval_secs: 180,
@@ -55,8 +55,9 @@ async function save() {
 }
 
 async function onLanguageChange() {
-  await save();
-  await setLocale(localSettings.value.language as "zh-CN" | "en");
+  const locale = localSettings.value.language as "zh-CN" | "en";
+  (i18n.global.locale as any).value = locale;
+  await invoke("save_settings", { settings: localSettings.value });
 }
 
 onMounted(loadSettings);
