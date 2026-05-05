@@ -26,14 +26,16 @@
       <div class="provider-actions">
         <template v-if="provider.has_token">
           <div class="token-display">
-            <span class="token-masked">••••••••</span>
+            <span class="balance-value">{{ balanceText(provider) }}</span>
           </div>
-           <button class="btn-test" @click="testConnection(provider.id)">
-             {{ $t('providerConfig.test') }}
-           </button>
-           <button class="btn-warning" @click="deleteToken(provider.id)">
-             {{ $t('providerConfig.deleteToken') }}
-           </button>
+          <div class="provider-actions-right">
+            <button class="btn-test" @click="testConnection(provider.id)">
+              {{ $t('providerConfig.test') }}
+            </button>
+            <button class="btn-warning" @click="deleteToken(provider.id)">
+              {{ $t('providerConfig.deleteToken') }}
+            </button>
+          </div>
         </template>
         <template v-else>
           <div class="token-input-group">
@@ -105,6 +107,29 @@ function statusClass(provider: ProviderState): string {
     return provider.status.toLowerCase();
   }
   return "error";
+}
+
+function balanceText(provider: ProviderState): string {
+  if (provider.display_label) return provider.display_label;
+  if (provider.balance != null) {
+    const currencySymbol = getCurrencySymbol(provider.currency);
+    const fmt = (v: number) => Number.isInteger(v) ? String(v) : v.toFixed(2);
+    return `${currencySymbol}${fmt(Number(provider.balance))}`;
+  }
+  if (provider.available != null) {
+    const currencySymbol = getCurrencySymbol(provider.currency);
+    const fmt = (v: number) => Number.isInteger(v) ? String(v) : v.toFixed(2);
+    return `${currencySymbol}${fmt(Number(provider.available))}`;
+  }
+  return "••••••••";
+}
+
+function getCurrencySymbol(currency: ProviderState["currency"]): string {
+  if (typeof currency === "string") {
+    return currency === "USD" ? "$" : currency === "CNY" ? "¥" : currency === "EUR" ? "€" : "";
+  }
+  if (typeof currency === "object" && "Custom" in currency) return currency.Custom;
+  return "";
 }
 
 function statusText(provider: ProviderState): string {
@@ -215,6 +240,10 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
 }
+.provider-actions-right {
+  display: flex;
+  gap: 4px;
+}
 .provider-badge {
   font-size: 12px;
   padding: 2px 8px;
@@ -236,6 +265,7 @@ onUnmounted(() => {
   display: flex;
   gap: 6px;
   align-items: center;
+  width: 100%;
 }
 .token-input {
   flex: 1;
@@ -293,17 +323,21 @@ onUnmounted(() => {
   font-size: 16px;
   padding: 4px;
 }
-.token-masked {
-  font-family: monospace;
-  font-size: 13px;
-  color: var(--text-secondary);
+.balance-value {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-heading);
+  letter-spacing: -0.3px;
 }
 .provider-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 4px;
 }
 .provider-icon-wrap {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: var(--icon-bg);
   display: inline-flex;
@@ -315,8 +349,8 @@ onUnmounted(() => {
   margin-right: 4px;
 }
 .provider-icon {
-  width: 12px;
-  height: 12px;
+  width: 15px;
+  height: 15px;
   object-fit: contain;
 }
 </style>
