@@ -1,9 +1,22 @@
+use rust_decimal::prelude::ToPrimitive;
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct HistoryPoint {
     pub recorded_at: String,
     pub value: f64,
+}
+
+/// Extract the primary numeric value from a ProviderState for history recording.
+/// Checks balance first, then available, then returns None.
+pub fn get_primary_value(balance: &Option<rust_decimal::Decimal>, available: &Option<rust_decimal::Decimal>) -> Option<f64> {
+    if let Some(ref b) = balance {
+        return b.to_f64();
+    }
+    if let Some(ref a) = available {
+        return a.to_f64();
+    }
+    None
 }
 
 fn range_to_days(range: &str) -> &str {

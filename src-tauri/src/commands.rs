@@ -2,7 +2,6 @@ use crate::provider::fetcher;
 use crate::provider::plugin;
 use crate::provider::types::*;
 use crate::state::AppState;
-use rust_decimal::prelude::ToPrimitive;
 use tauri::ActivationPolicy;
 use tauri::Emitter;
 use tauri::Manager;
@@ -106,8 +105,10 @@ pub async fn test_connection(
     result.has_token = true;
 
     if result.status == ProviderStatus::Ok {
-        if let Some(ref balance) = result.balance {
-            let value = balance.to_f64().unwrap_or(0.0);
+        if let Some(value) = crate::provider::history::get_primary_value(
+            &result.balance,
+            &result.available,
+        ) {
             let _ = crate::provider::history::record_history(&provider_id, value);
         }
     }
@@ -150,8 +151,10 @@ pub async fn refresh_provider(
     result.has_token = true;
 
     if result.status == ProviderStatus::Ok {
-        if let Some(ref balance) = result.balance {
-            let value = balance.to_f64().unwrap_or(0.0);
+        if let Some(value) = crate::provider::history::get_primary_value(
+            &result.balance,
+            &result.available,
+        ) {
             let _ = crate::provider::history::record_history(&provider_id, value);
         }
     }
@@ -184,8 +187,10 @@ pub async fn refresh_all(state: tauri::State<'_, AppState>) -> Result<(), String
             result.has_token = true;
 
             if result.status == ProviderStatus::Ok {
-                if let Some(ref balance) = result.balance {
-                    let value = balance.to_f64().unwrap_or(0.0);
+                if let Some(value) = crate::provider::history::get_primary_value(
+                    &result.balance,
+                    &result.available,
+                ) {
                     let _ = crate::provider::history::record_history(id, value);
                 }
             }
