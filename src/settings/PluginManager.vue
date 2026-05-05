@@ -23,6 +23,22 @@
           {{ statusText(provider) }}
         </span>
       </div>
+      <div
+        v-if="provider.has_token && isStatusOk(provider) && hasHistoryData(provider.id)"
+        class="trend-section"
+      >
+        <div class="range-selector">
+          <button
+            v-for="r in ranges"
+            :key="r.value"
+            :class="['range-btn', { active: (historyRange[provider.id] || currentRange) === r.value }]"
+            @click="onRangeChange(provider.id, r.value)"
+          >
+            {{ r.label }}
+          </button>
+        </div>
+        <TrendChart :dataPoints="historyData[provider.id] || []" />
+      </div>
       <div class="provider-actions">
         <template v-if="provider.has_token">
           <div class="token-display">
@@ -111,8 +127,9 @@ import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import { open, ask } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
-import type { ProviderState, ProviderConfig } from "../types";
+import type { HistoryPoint, ProviderState, ProviderConfig } from "../types";
 import { getIconUrl } from "../composables/useProviderIcon";
+import TrendChart from "../components/TrendChart.vue";
 
 const { t } = useI18n();
 
@@ -138,6 +155,9 @@ function onIconError(event: Event) {
 const providers = ref<ProviderState[]>([]);
 const tokenInputs = ref<Record<string, string>>({});
 const showToken = ref<Record<string, boolean>>({});
+const historyData = ref<Record<string, HistoryPoint[]>>({});
+const historyRange = ref<Record<string, string>>({});
+const currentRange = ref("1w");
 const showGuide = ref(false);
 const copied = ref(false);
 
@@ -198,6 +218,40 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
   }
   if (typeof currency === "object" && "Custom" in currency) return currency.Custom;
   return "";
+}
+
+const ranges = [
+  { value: "24h", label: "24h" },
+  { value: "3d", label: "3d" },
+  { value: "1w", label: "1w" },
+  { value: "1m", label: "1m" },
+];
+
+function isStatusOk(provider: ProviderState): boolean {
+  return typeof provider.status === "string" && provider.status === "Ok";
+}
+
+function hasHistoryData(providerId: string): boolean {
+  const data = historyData.value[providerId];
+  return !!data && data.length > 0;
+}
+
+async function loadHistory(providerId: string, range: string) {
+  try {
+    const points = await invoke<HistoryPoint[]>("get_provider_history", {
+      providerId,
+      range,
+    });
+    historyData.value[providerId] = points;
+    historyRange.value[providerId] = range;
+  } catch (e) {
+    console.error("Failed to load history:", e);
+  }
+}
+
+async function onRangeChange(providerId: string, range: string) {
+  historyRange.value[providerId] = range;
+  await loadHistory(providerId, range);
 }
 
 function statusText(provider: ProviderState): string {
@@ -309,6 +363,11 @@ async function removePlugin(id: string) {
 
 async function refreshData() {
   providers.value = await invoke<ProviderState[]>("get_providers");
+  for (const p of providers.value) {
+    if (p.has_token && typeof p.status === "string" && p.status === "Ok") {
+      await loadHistory(p.id, historyRange.value[p.id] || currentRange.value);
+    }
+  }
 }
 
 let unlisten: (() => void) | null = null;
@@ -360,6 +419,35 @@ onUnmounted(() => {
 .provider-actions-right {
   display: flex;
   gap: 4px;
+}
+.trend-section {
+  margin-bottom: 4px;
+}
+.range-selector {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-input);
+  border-radius: 6px;
+  padding: 2px;
+  width: fit-content;
+  margin-bottom: 4px;
+}
+.range-btn {
+  padding: 2px 10px;
+  font-size: 11px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.range-btn.active {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+.range-btn:hover:not(.active) {
+  color: var(--text-secondary);
 }
 .provider-badge {
   font-size: 12px;
