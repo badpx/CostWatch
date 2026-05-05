@@ -21,6 +21,7 @@ export function useProviders() {
   }
 
   async function refreshAll() {
+    if (loading.value) return;
     loading.value = true;
     error.value = null;
     try {

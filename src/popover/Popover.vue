@@ -167,6 +167,8 @@ onUnmounted(() => {
 }
 .refresh-btn:hover {
   color: var(--text-heading);
+}
+.refresh-btn.spinning {
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin {

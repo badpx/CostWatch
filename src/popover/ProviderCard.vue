@@ -26,20 +26,16 @@
     </div>
 
     <template v-if="isOk">
-      <div class="provider-balance">
+      <div class="provider-balance-row">
         <span class="balance-label">{{ displayLabel }}</span>
+        <span v-if="provider.last_updated" class="last-updated">{{ timeAgo }}</span>
       </div>
-      <div v-if="provider.has_progress" class="progress-bar">
+      <div class="progress-bar" :class="{ invisible: !provider.has_progress }">
         <div
           class="progress-fill"
-          :style="{ width: progressPercent + '%' }"
+          :style="{ width: progressPercent + '%', background: progressColor }"
           :class="progressDirection"
         ></div>
-      </div>
-      <div class="provider-meta">
-        <span v-if="provider.last_updated" class="last-updated">
-          {{ timeAgo }}
-        </span>
       </div>
     </template>
 
@@ -109,10 +105,17 @@ const displayLabel = computed(() => {
 
 const progressPercent = computed(() => {
   const p = props.provider;
-  if (p.used == null || p.available == null) return 0;
-  if (p.available === 0) return 0;
-  const pct = (Number(p.used) / Number(p.available)) * 100;
+  if (p.balance == null || p.available == null) return 0;
+  if (Number(p.available) === 0) return 0;
+  const pct = (Number(p.balance) / Number(p.available)) * 100;
   return Math.min(Math.max(pct, 0), 100);
+});
+
+const progressColor = computed(() => {
+  const pct = progressPercent.value;
+  const r = Math.round(255 * (1 - pct / 100));
+  const g = Math.round(200 * (pct / 100));
+  return `rgb(${r}, ${g}, 58)`;
 });
 
 const progressDirection = computed(() => "consumption");
@@ -219,12 +222,22 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
   50% { opacity: 0.35; }
   100% { opacity: 1; }
 }
-.provider-balance {
+.provider-balance-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+.balance-label {
   font-size: 17px;
   font-weight: 700;
   color: var(--text-heading);
-  margin-bottom: 6px;
   letter-spacing: -0.3px;
+}
+.last-updated {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
 }
 .progress-bar {
   height: 4px;
@@ -232,22 +245,18 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
   border-radius: 2px;
   overflow: hidden;
 }
+.progress-bar.invisible {
+  visibility: hidden;
+}
 .progress-fill {
   height: 100%;
   border-radius: 2px;
-  transition: width 0.3s ease;
+  transition: width 0.3s ease, background 0.3s ease;
 }
-.progress-fill.consumption {
-  background: var(--success);
-}
-.provider-meta {
-  margin-top: 5px;
-  display: flex;
-  justify-content: flex-end;
-}
-.last-updated {
-  font-size: 10px;
-  color: var(--text-tertiary);
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease, background 0.3s ease;
 }
 .provider-message {
   color: var(--text-muted);
