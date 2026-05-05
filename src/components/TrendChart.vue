@@ -45,8 +45,14 @@ function draw() {
   const padY = 10;
   const chartH = h - padY * 2;
 
+  // Time-based X axis: map timestamps to proportional positions
+  const timestamps = points.map((p) => new Date(p.recorded_at).getTime());
+  const tMin = Math.min(...timestamps);
+  const tMax = Math.max(...timestamps);
+  const tRange = tMax - tMin || 1;
+
   const toX = (i: number) =>
-    points.length === 1 ? w / 2 : (i / (points.length - 1)) * w;
+    points.length === 1 ? w / 2 : ((timestamps[i] - tMin) / tRange) * w;
   const toY = (v: number) =>
     padY + chartH - ((v - minVal) / range) * chartH;
 
