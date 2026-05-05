@@ -71,15 +71,15 @@ pub async fn fetch_provider(
         Ok(response) => {
             let status = response.status();
             if status == reqwest::StatusCode::UNAUTHORIZED {
-                state.status = ProviderStatus::Error("认证失败，请检查Token".into());
+                state.status = ProviderStatus::Error("Authentication failed, please check your token".into());
                 return state;
             }
             if status == reqwest::StatusCode::TOO_MANY_REQUESTS {
-                state.status = ProviderStatus::Error("请求限流，稍后重试".into());
+                state.status = ProviderStatus::Error("Rate limited, please try again later".into());
                 return state;
             }
             if !status.is_success() {
-                state.status = ProviderStatus::Error(format!("HTTP错误: {}", status));
+                state.status = ProviderStatus::Error(format!("HTTP error: {}", status));
                 return state;
             }
 
@@ -104,23 +104,23 @@ pub async fn fetch_provider(
                         }
                         Err(e) => {
                             state.status =
-                                ProviderStatus::Error(format!("数据解析错误: {}", e));
+                                ProviderStatus::Error(format!("Data extraction error: {}", e));
                         }
                     }
                 }
                 Err(e) => {
                     state.status =
-                        ProviderStatus::Error(format!("响应解析失败: {}", e));
+                        ProviderStatus::Error(format!("Response parse error: {}", e));
                 }
             }
         }
         Err(e) => {
             if e.is_timeout() {
-                state.status = ProviderStatus::Error("连接超时".into());
+                state.status = ProviderStatus::Error("Connection timed out".into());
             } else if e.is_connect() {
-                state.status = ProviderStatus::Error("网络不可用".into());
+                state.status = ProviderStatus::Error("Network unavailable".into());
             } else {
-                state.status = ProviderStatus::Error(format!("请求失败: {}", e));
+                state.status = ProviderStatus::Error(format!("Request failed: {}", e));
             }
         }
     }

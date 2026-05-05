@@ -19,18 +19,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useI18n } from "vue-i18n";
 import ProviderConfig from "./ProviderConfig.vue";
 import PluginManager from "./PluginManager.vue";
 import GeneralSettings from "./GeneralSettings.vue";
 import { listen } from "@tauri-apps/api/event";
 
+const { t } = useI18n();
+
 const activeTab = ref("providers");
 
 const tabs = [
-  { id: "providers", label: "提供商配置" },
-  { id: "plugins", label: "插件管理" },
-  { id: "general", label: "通用" },
+  { id: "providers", label: computed(() => t("settings.tabs.providers")) },
+  { id: "plugins", label: computed(() => t("settings.tabs.plugins")) },
+  { id: "general", label: computed(() => t("settings.tabs.general")) },
 ];
 
 let unlisten: (() => void) | null = null;

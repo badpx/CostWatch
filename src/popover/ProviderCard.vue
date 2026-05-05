@@ -40,21 +40,24 @@
     </template>
 
     <template v-else-if="isUnconfigured">
-      <div class="provider-message">未配置 Token</div>
-      <button class="btn-small" @click="$emit('openSettings')">配置</button>
+      <div class="provider-message">{{ $t('provider.unconfiguredToken') }}</div>
+      <button class="btn-small" @click="$emit('openSettings')">{{ $t('provider.configure') }}</button>
     </template>
 
     <template v-else-if="isError">
       <div class="provider-message error">{{ errorMessage }}</div>
-      <button class="btn-small" @click="$emit('retry', provider.id)">重试</button>
+      <button class="btn-small" @click="$emit('retry', provider.id)">{{ $t('provider.retry') }}</button>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from "vue";
+import { useI18n } from "vue-i18n";
 import type { ProviderState } from "../types";
 import { useProviderIcon } from "../composables/useProviderIcon";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   provider: ProviderState;
@@ -84,7 +87,7 @@ const errorMessage = computed(() => {
   if (typeof props.provider.status === "object" && "Error" in props.provider.status) {
     return props.provider.status.Error;
   }
-  return props.provider.error_message || "未知错误";
+  return props.provider.error_message || t("provider.unknownError");
 });
 
 const displayLabel = computed(() => {
@@ -99,7 +102,7 @@ const displayLabel = computed(() => {
   if (balance && available) return `${balance} / ${available}`;
   if (balance) return balance;
   if (available) return available;
-  if (p.is_available != null) return p.is_available ? "可用" : "不可用";
+  if (p.is_available != null) return p.is_available ? t("provider.available") : t("provider.unavailable");
   return "—";
 });
 
@@ -138,9 +141,9 @@ const timeAgo = computed(() => {
   const seconds = Math.floor((now.value - date.getTime()) / 1000);
   if (seconds < 60) return "";
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}分钟前`;
+  if (minutes < 60) return t("provider.minutesAgo", { n: minutes });
   const hours = Math.floor(minutes / 60);
-  return `${hours}小时前`;
+  return t("provider.hoursAgo", { n: hours });
 });
 
 function getCurrencySymbol(currency: ProviderState["currency"]): string {
@@ -247,11 +250,6 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
 }
 .progress-bar.invisible {
   visibility: hidden;
-}
-.progress-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.3s ease, background 0.3s ease;
 }
 .progress-fill {
   height: 100%;

@@ -191,16 +191,22 @@ pub struct ProviderToken {
 // General Settings (in config.json)
 // ============================================================
 
+fn default_refresh_interval() -> u64 {
+    180
+}
+
+fn default_language() -> String {
+    "zh-CN".to_string()
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneralSettings {
     #[serde(default = "default_refresh_interval")]
     pub refresh_interval_secs: u64,
     #[serde(default)]
     pub launch_at_login: bool,
-}
-
-fn default_refresh_interval() -> u64 {
-    180
+    #[serde(default = "default_language")]
+    pub language: String,
 }
 
 impl Default for GeneralSettings {
@@ -208,6 +214,7 @@ impl Default for GeneralSettings {
         Self {
             refresh_interval_secs: 180,
             launch_at_login: false,
+            language: "zh-CN".to_string(),
         }
     }
 }

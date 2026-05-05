@@ -1,6 +1,6 @@
 <template>
   <div class="provider-config">
-    <h3 class="section-title">内置提供商</h3>
+    <h3 class="section-title">{{ $t('providerConfig.builtinTitle') }}</h3>
     <div
       v-for="provider in builtinProviders"
       :key="provider.id"
@@ -28,12 +28,12 @@
           <div class="token-display">
             <span class="token-masked">••••••••</span>
           </div>
-          <button class="btn-test" @click="testConnection(provider.id)">
-            测试
-          </button>
-          <button class="btn-warning" @click="deleteToken(provider.id)">
-            删除Token
-          </button>
+           <button class="btn-test" @click="testConnection(provider.id)">
+             {{ $t('providerConfig.test') }}
+           </button>
+           <button class="btn-warning" @click="deleteToken(provider.id)">
+             {{ $t('providerConfig.deleteToken') }}
+           </button>
         </template>
         <template v-else>
           <div class="token-input-group">
@@ -42,7 +42,7 @@
               @input="stripSpaces(provider.id)"
               :type="showToken[provider.id] ? 'text' : 'password'"
               class="token-input"
-              placeholder="输入 API Token"
+              :placeholder="$t('providerConfig.tokenPlaceholder')"
             />
             <button class="btn-toggle" @click="toggleTokenVisibility(provider.id)">
               {{ showToken[provider.id] ? '👁' : '🙈' }}
@@ -52,7 +52,7 @@
               :disabled="!tokenInputs[provider.id]"
               @click="saveToken(provider.id)"
             >
-              保存
+              {{ $t('providerConfig.save') }}
             </button>
           </div>
         </template>
@@ -63,11 +63,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import { ask } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
 import type { ProviderState } from "../types";
 import { getIconUrl } from "../composables/useProviderIcon";
+
+const { t } = useI18n();
 
 function iconKey(provider: ProviderState): string {
   if (typeof provider.icon === "object" && "Builtin" in provider.icon) return provider.icon.Builtin;
@@ -107,16 +110,16 @@ function statusClass(provider: ProviderState): string {
 function statusText(provider: ProviderState): string {
   if (typeof provider.status === "string") {
     const map: Record<string, string> = {
-      Ok: "✓ 已连接",
-      Fetching: "⏳ 连接中",
-      Unconfigured: "未配置",
+      Ok: t("providerConfig.statusOk"),
+      Fetching: t("providerConfig.statusFetching"),
+      Unconfigured: t("providerConfig.statusUnconfigured"),
     };
     return map[provider.status] || provider.status;
   }
   if (typeof provider.status === "object" && "Error" in provider.status) {
     return `✗ ${provider.status.Error}`;
   }
-  return "未知";
+  return t("providerConfig.statusUnknown");
 }
 
 function toggleTokenVisibility(id: string) {
@@ -139,11 +142,11 @@ async function saveToken(id: string) {
 }
 
 async function deleteToken(id: string) {
-  const confirmed = await ask("确定要删除此 Token 吗？删除后需要重新配置才能继续使用。", {
-    title: "删除确认",
+  const confirmed = await ask(t("providerConfig.deleteTokenConfirm"), {
+    title: t("providerConfig.deleteTokenTitle"),
     kind: "warning",
-    okLabel: "删除",
-    cancelLabel: "取消",
+    okLabel: t("providerConfig.deleteTokenOk"),
+    cancelLabel: t("providerConfig.cancel"),
   });
   if (!confirmed) return;
   await invoke("delete_token", { providerId: id });

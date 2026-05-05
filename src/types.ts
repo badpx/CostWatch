@@ -60,4 +60,5 @@ export interface ProgressConfig {
 export interface GeneralSettings {
   refresh_interval_secs: number;
   launch_at_login: boolean;
+  language: string;
 }

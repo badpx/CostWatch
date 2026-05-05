@@ -61,9 +61,14 @@ Each window has its own HTML entry point: `popover.html`, `settings.html`. Confi
 | `src/settings/Settings.vue` | Settings root: tab navigation |
 | `src/settings/ProviderConfig.vue` | Per-provider token input, test connection, delete |
 | `src/settings/PluginManager.vue` | Import/remove YAML plugin files |
-| `src/settings/GeneralSettings.vue` | Refresh interval selector, launch-at-login toggle |
+| `src/settings/GeneralSettings.vue` | Refresh interval selector, launch-at-login toggle, language switcher |
 | `src/composables/useProviders.ts` | Reactive provider list, `invoke('refresh_all')`, frontend `setInterval` for auto-refresh |
 | `src/composables/useSettings.ts` | Settings read/write via `invoke` |
+| `src/composables/useLocale.ts` | Locale switching: `initLocale()` reads `language` from backend, `setLocale()` persists and applies |
+| `src/composables/useProviderIcon.ts` | Provider icon resolution: CDN → local SVG → local PNG fallback |
+| `src/i18n/index.ts` | vue-i18n instance (Composition API mode, `legacy: false`) |
+| `src/i18n/locales/zh-CN.ts` | Simplified Chinese translations |
+| `src/i18n/locales/en.ts` | English translations |
 | `src/types.ts` | TypeScript types mirroring Rust structs (includes `display_label: string | null`) |
 
 ## Provider Plugin System
@@ -106,9 +111,41 @@ Popover and settings windows use `api.prevent_close()` on `CloseRequested` + `wi
 
 ## Data Storage
 
-- Settings: `~/.costwatch/config.json` (refresh_interval_secs, launch_at_login)
+- Settings: `~/.costwatch/config.json` (refresh_interval_secs, launch_at_login, language)
 - Tokens: `~/.costwatch/tokens.json` (plaintext JSON — Stronghold encryption deferred)
 - Plugin YAML: `~/.costwatch/providers/*.yaml`
+
+## Internationalization (i18n)
+
+The app uses **vue-i18n** (Composition API mode, `legacy: false`) to support multiple languages. Currently supports **Simplified Chinese** (`zh-CN`, default) and **English** (`en`).
+
+### Architecture
+
+- `src/i18n/index.ts`: Creates the vue-i18n instance, registered as a Vue plugin in both `main-popover.ts` and `main-settings.ts`
+- `src/i18n/locales/zh-CN.ts`: Chinese translations (the canonical source of all i18n keys)
+- `src/i18n/locales/en.ts`: English translations (must mirror every key in `zh-CN.ts`)
+- `src/composables/useLocale.ts`: `initLocale()` loads the persisted language from backend on startup; `setLocale()` switches language and persists to `GeneralSettings`
+- Language preference is stored in `GeneralSettings.language` field (both Rust `provider/types.rs` and TypeScript `src/types.ts`)
+- `serde(default = "default_language")` on the Rust side ensures backward compatibility — existing `config.json` files without `language` default to `"zh-CN"`
+
+### Adding New UI Strings (MANDATORY)
+
+**NEVER hardcode user-visible text in Vue templates or scripts.** Every UI string must go through the i18n system:
+
+1. **Add the key to `src/i18n/locales/zh-CN.ts`** first — this is the canonical key registry
+2. **Add the same key to `src/i18n/locales/en.ts`** with the English translation
+3. **Use `$t('key.path')` in templates** or `t('key.path')` in `<script setup>` (after `const { t } = useI18n()`)
+4. **For interpolated strings**, use named parameters: `$t('key', { var: value })` and in locale: `"text {var} more text"`
+
+### Key Naming Convention
+
+- Top-level namespace per component/feature: `popover`, `provider`, `settings`, `providerConfig`, `pluginManager`, `generalSettings`
+- Nested keys for sub-groups: `settings.tabs.providers`
+- Descriptive key names: `deleteTokenConfirm` not `msg1`
+
+### Backend Error Messages
+
+Rust backend error messages (in `provider/fetcher.rs`) are **always in English** — they are technical/diagnostic strings, not user-facing labels. The frontend i18n system handles all user-visible text.
 
 ## Known Gotchas
 
@@ -120,3 +157,4 @@ Popover and settings windows use `api.prevent_close()` on `CloseRequested` + `wi
 - Frontend refresh timer is entirely client-side (`setInterval`), restarted on `settings-updated` event — no backend timer
 - `Image::from_bytes()` fails to properly decode palette PNGs for tray icons — always use `tauri::include_image!` macro instead
 - Window labels must match `^[a-zA-Z][a-zA-Z0-9/_:.-]*$` — no spaces or special chars
+- `vue-i18n` Composition API mode: `i18n.global.locale` is a `WritableComputedRef`, access via `(i18n.global.locale as any).value` in non-component code

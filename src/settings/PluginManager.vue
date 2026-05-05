@@ -1,6 +1,6 @@
 <template>
   <div class="plugin-manager">
-    <h3 class="section-title">插件提供商</h3>
+    <h3 class="section-title">{{ $t('pluginManager.title') }}</h3>
 
     <div
       v-for="provider in pluginProviders"
@@ -28,15 +28,15 @@
           <div class="token-display">
             <span class="token-masked">••••••••</span>
           </div>
-          <button class="btn-test" @click="testConnection(provider.id)">
-            测试
-          </button>
-          <button class="btn-warning" @click="deleteToken(provider.id)">
-            删除Token
-          </button>
-          <button class="btn-danger" @click="removePlugin(provider.id)">
-            移除插件
-          </button>
+           <button class="btn-test" @click="testConnection(provider.id)">
+             {{ $t('pluginManager.test') }}
+           </button>
+           <button class="btn-warning" @click="deleteToken(provider.id)">
+             {{ $t('pluginManager.deleteToken') }}
+           </button>
+           <button class="btn-danger" @click="removePlugin(provider.id)">
+             {{ $t('pluginManager.removePlugin') }}
+           </button>
         </template>
         <template v-else>
           <div class="token-input-group">
@@ -45,7 +45,7 @@
               @input="stripSpaces(provider.id)"
               :type="showToken[provider.id] ? 'text' : 'password'"
               class="token-input"
-              placeholder="输入 API Token"
+              :placeholder="$t('pluginManager.tokenPlaceholder')"
             />
             <button class="btn-toggle" @click="toggleTokenVisibility(provider.id)">
               {{ showToken[provider.id] ? '👁' : '🙈' }}
@@ -55,10 +55,10 @@
               :disabled="!tokenInputs[provider.id]"
               @click="saveToken(provider.id)"
             >
-              保存
+              {{ $t('pluginManager.save') }}
             </button>
             <button class="btn-danger" @click="removePlugin(provider.id)">
-              移除插件
+              {{ $t('pluginManager.removePlugin') }}
             </button>
           </div>
         </template>
@@ -66,37 +66,37 @@
     </div>
 
     <div v-if="pluginProviders.length === 0" class="empty-state">
-      <p>暂无插件提供商</p>
+      <p>{{ $t('pluginManager.noPlugins') }}</p>
     </div>
 
     <div class="import-section">
       <button class="btn-link" @click="showGuide = !showGuide">
-        {{ showGuide ? '收起说明' : '查看示例配置' }}
+        {{ showGuide ? $t('pluginManager.hideGuide') : $t('pluginManager.showGuide') }}
       </button>
       <button class="btn-primary" @click="importPlugin">
-        + 导入插件配置文件
+        {{ $t('pluginManager.importPlugin') }}
       </button>
     </div>
 
     <div v-if="showGuide" class="guide-panel">
-      <h4 class="guide-title">插件配置格式说明</h4>
+      <h4 class="guide-title">{{ $t('pluginManager.guideTitle') }}</h4>
       <p class="guide-desc">
-        插件是一个 YAML 文件，定义了如何从 Provider API 获取用量数据并展示。
+        {{ $t('pluginManager.guideDesc') }}
       </p>
       <div class="guide-section">
-        <h5 class="guide-subtitle">关键字段说明</h5>
+        <h5 class="guide-subtitle">{{ $t('pluginManager.guideKeyFieldsTitle') }}</h5>
         <ul class="guide-list">
-          <li><strong>api.url</strong> — 查询余额的 API 地址</li>
-          <li><strong>api.headers</strong> — 请求头，使用 <code v-pre>{{token}}</code> 占位符表示用户填写的 Token</li>
-          <li><strong>response</strong> — 定义如何从 JSON 响应中提取字段</li>
-          <li><strong>display.label</strong> — 展示文案，支持 <code v-pre>{{字段名}}</code> 和 <code v-pre>{{currency_unit}}</code> 占位符</li>
+          <li><strong>api.url</strong> — {{ $t('pluginManager.guideApiUrl') }}</li>
+          <li><strong>api.headers</strong> — {{ $t('pluginManager.guideApiHeaders') }}</li>
+          <li><strong>response</strong> — {{ $t('pluginManager.guideResponse') }}</li>
+          <li><strong>display.label</strong> — {{ $t('pluginManager.guideDisplayLabel') }}</li>
         </ul>
       </div>
       <div class="guide-section">
-        <h5 class="guide-subtitle">示例配置</h5>
+        <h5 class="guide-subtitle">{{ $t('pluginManager.guideSampleTitle') }}</h5>
         <div class="code-block">
           <pre>{{ sampleYaml }}</pre>
-          <button class="btn-copy" @click="copySample">{{ copied ? '已复制' : '复制' }}</button>
+          <button class="btn-copy" @click="copySample">{{ copied ? $t('pluginManager.copied') : $t('pluginManager.copy') }}</button>
         </div>
       </div>
     </div>
@@ -105,11 +105,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import { open, ask } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
 import type { ProviderState, ProviderConfig } from "../types";
 import { getIconUrl } from "../composables/useProviderIcon";
+
+const { t } = useI18n();
 
 function iconKey(provider: ProviderState): string {
   if (typeof provider.icon === "object" && "Custom" in provider.icon) return provider.icon.Custom;
@@ -175,16 +178,16 @@ function statusClass(provider: ProviderState): string {
 function statusText(provider: ProviderState): string {
   if (typeof provider.status === "string") {
     const map: Record<string, string> = {
-      Ok: "✓ 已连接",
-      Fetching: "⏳ 连接中",
-      Unconfigured: "未配置",
+      Ok: t("pluginManager.statusOk"),
+      Fetching: t("pluginManager.statusFetching"),
+      Unconfigured: t("pluginManager.statusUnconfigured"),
     };
     return map[provider.status] || provider.status;
   }
   if (typeof provider.status === "object" && "Error" in provider.status) {
     return `✗ ${provider.status.Error}`;
   }
-  return "未知";
+  return t("pluginManager.statusUnknown");
 }
 
 function toggleTokenVisibility(id: string) {
@@ -207,11 +210,11 @@ async function saveToken(id: string) {
 }
 
 async function deleteToken(id: string) {
-  const confirmed = await ask("确定要删除此 Token 吗？删除后需要重新配置才能继续使用。", {
-    title: "删除确认",
+  const confirmed = await ask(t("pluginManager.deleteTokenConfirm"), {
+    title: t("pluginManager.deleteTokenTitle"),
     kind: "warning",
-    okLabel: "删除",
-    cancelLabel: "取消",
+    okLabel: t("pluginManager.deleteTokenOk"),
+    cancelLabel: t("pluginManager.cancel"),
   });
   if (!confirmed) return;
   await invoke("delete_token", { providerId: id });
@@ -247,8 +250,8 @@ async function importPlugin() {
     );
     alert(
       existed
-        ? `成功覆盖插件：${config.name}`
-        : `成功导入插件：${config.name}`
+        ? t("pluginManager.pluginOverwritten", { name: config.name })
+        : t("pluginManager.pluginImported", { name: config.name })
     );
     await refreshData();
     const newId = `plugin-${config.name.toLowerCase().replace(/ /g, "-")}`;
@@ -258,16 +261,16 @@ async function importPlugin() {
       await refreshData();
     }
   } catch (e) {
-    alert(`导入失败: ${e}`);
+    alert(t("pluginManager.importFailed", { error: e }));
   }
 }
 
 async function removePlugin(id: string) {
-  const confirmed = await ask(`确定要移除插件 ${id} 吗？`, {
-    title: "移除确认",
+  const confirmed = await ask(t("pluginManager.removeConfirm", { id }), {
+    title: t("pluginManager.removeTitle"),
     kind: "warning",
-    okLabel: "移除",
-    cancelLabel: "取消",
+    okLabel: t("pluginManager.removeOk"),
+    cancelLabel: t("pluginManager.cancel"),
   });
   if (!confirmed) return;
 
@@ -275,7 +278,7 @@ async function removePlugin(id: string) {
     await invoke("remove_plugin", { providerId: id });
     await refreshData();
   } catch (e) {
-    alert(`移除失败: ${e}`);
+    alert(t("pluginManager.removeFailed", { error: e }));
   }
 }
 

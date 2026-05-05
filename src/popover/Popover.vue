@@ -6,7 +6,7 @@
         v-if="!loading"
         class="refresh-btn"
         @click="refreshAll"
-        title="刷新"
+        :title="$t('popover.refreshing')"
       >
         ↻
       </button>
@@ -16,7 +16,7 @@
     <div class="providers-list">
       <template v-if="!initialized">
         <div class="empty-state">
-          <p>正在获取额度信息…</p>
+          <p>{{ $t('popover.fetchingInfo') }}</p>
         </div>
       </template>
       <template v-else>
@@ -29,9 +29,9 @@
         />
 
         <div v-if="configuredProviders.length === 0" class="empty-state">
-          <p>暂无配置提供商</p>
+          <p>{{ $t('popover.noProvider') }}</p>
           <button class="btn-primary" @click="openSettings">
-            打开设置
+            {{ $t('popover.openSettings') }}
           </button>
         </div>
       </template>
@@ -39,7 +39,7 @@
 
     <div class="popover-footer">
       <span class="auto-refresh">
-        每 {{ settings.refresh_interval_secs }} 秒自动刷新
+        {{ $t('popover.autoRefresh', { secs: settings.refresh_interval_secs }) }}
       </span>
       <button class="settings-btn" @click="openSettings">⚙</button>
     </div>
