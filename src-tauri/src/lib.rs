@@ -23,9 +23,28 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None,
         ))
+        .plugin(tauri_plugin_sql::Builder::new().build())
         .manage(AppState::default())
         .setup(|app| {
             storage::ensure_dirs()?;
+
+            // Initialize history database
+            let history_db_path = dirs::home_dir()
+                .ok_or_else(|| "home dir not found".to_string())
+                .map_err(|e| Box::<dyn std::error::Error>::from(e))?
+                .join(".costwatch")
+                .join("history.db");
+            let conn = rusqlite::Connection::open(&history_db_path)?;
+            conn.execute_batch(
+                "CREATE TABLE IF NOT EXISTS provider_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    provider_id TEXT NOT NULL,
+                    recorded_at TEXT NOT NULL,
+                    value REAL NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_provider_time
+                    ON provider_history(provider_id, recorded_at);"
+            )?;
 
             let settings = storage::load_settings().unwrap_or_default();
 
