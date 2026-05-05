@@ -62,3 +62,8 @@ export interface GeneralSettings {
   launch_at_login: boolean;
   language: string;
 }
+
+export interface HistoryPoint {
+  recorded_at: string;
+  value: number;
+}
