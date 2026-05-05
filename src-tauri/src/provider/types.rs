@@ -39,7 +39,7 @@ pub struct ProviderState {
     pub error_message: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ProviderStatus {
     Ok,
     Fetching,

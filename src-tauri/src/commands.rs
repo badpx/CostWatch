@@ -2,6 +2,7 @@ use crate::provider::fetcher;
 use crate::provider::plugin;
 use crate::provider::types::*;
 use crate::state::AppState;
+use rust_decimal::prelude::ToPrimitive;
 use tauri::ActivationPolicy;
 use tauri::Emitter;
 use tauri::Manager;
@@ -104,6 +105,13 @@ pub async fn test_connection(
     let mut result = fetcher::fetch_provider(&config, &provider_id, &token, is_builtin).await;
     result.has_token = true;
 
+    if result.status == ProviderStatus::Ok {
+        if let Some(ref balance) = result.balance {
+            let value = balance.to_f64().unwrap_or(0.0);
+            let _ = crate::provider::history::record_history(&provider_id, value);
+        }
+    }
+
     if matches!(result.status, ProviderStatus::Ok) {
         let mut providers = state.providers.lock().unwrap();
         if let Some(pos) = providers.iter().position(|p| p.id == provider_id) {
@@ -141,6 +149,13 @@ pub async fn refresh_provider(
     let mut result = fetcher::fetch_provider(&config, &provider_id, &token, is_builtin).await;
     result.has_token = true;
 
+    if result.status == ProviderStatus::Ok {
+        if let Some(ref balance) = result.balance {
+            let value = balance.to_f64().unwrap_or(0.0);
+            let _ = crate::provider::history::record_history(&provider_id, value);
+        }
+    }
+
     let mut providers = state.providers.lock().unwrap();
     if let Some(pos) = providers.iter().position(|p| p.id == provider_id) {
         providers[pos] = result.clone();
@@ -167,6 +182,14 @@ pub async fn refresh_all(state: tauri::State<'_, AppState>) -> Result<(), String
             let mut result =
                 fetcher::fetch_provider(config, id, &token_entry.token, is_builtin).await;
             result.has_token = true;
+
+            if result.status == ProviderStatus::Ok {
+                if let Some(ref balance) = result.balance {
+                    let value = balance.to_f64().unwrap_or(0.0);
+                    let _ = crate::provider::history::record_history(id, value);
+                }
+            }
+
             updated_providers.push(result);
         } else {
             let is_builtin = !id.starts_with("plugin-");
