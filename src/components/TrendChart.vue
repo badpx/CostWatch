@@ -46,21 +46,10 @@ function draw() {
   const padY = 10;
   const chartH = h - padY * 2;
 
-  // Time-based X axis: anchor to the selected time range,
-  // but fall back to data-driven layout if data spans <20% of the range
+  // Time-based X axis: anchor to the selected time range
   const timestamps = points.map((p) => new Date(p.recorded_at).getTime());
-  const dataSpan = Math.max(...timestamps) - Math.min(...timestamps);
-  const rangeSpan = rangeToMs(props.range);
-  const useDataDrivenLayout = dataSpan < rangeSpan * 0.2;
-
-  let tMin: number, tMax: number;
-  if (useDataDrivenLayout) {
-    tMin = Math.min(...timestamps);
-    tMax = Math.max(...timestamps);
-  } else {
-    tMax = Date.now();
-    tMin = tMax - rangeSpan;
-  }
+  const tMax = Date.now();
+  const tMin = tMax - rangeToMs(props.range);
   const tRange = tMax - tMin || 1;
 
   const toX = (i: number) => {
