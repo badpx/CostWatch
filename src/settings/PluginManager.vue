@@ -241,6 +241,7 @@ async function loadHistory(providerId: string, range: string) {
       providerId,
       range,
     });
+    console.log(`[history] ${providerId} range=${range} points=${points.length}`);
     historyData.value[providerId] = points;
     historyRange.value[providerId] = range;
   } catch (e) {
