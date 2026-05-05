@@ -47,7 +47,8 @@ function draw() {
   const chartH = h - padY * 2;
 
   // Time-based X axis: anchor to the selected time range
-  const timestamps = points.map((p) => new Date(p.recorded_at).getTime());
+  // recorded_at is UTC from SQLite datetime('now'), append 'Z' for correct JS parsing
+  const timestamps = points.map((p) => new Date(p.recorded_at + "Z").getTime());
   const tMax = Date.now();
   const tMin = tMax - rangeToMs(props.range);
   const tRange = tMax - tMin || 1;
