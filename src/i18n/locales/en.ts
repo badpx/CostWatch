@@ -88,5 +88,9 @@ export default {
     language: "Language",
     languageZh: "简体中文",
     languageEn: "English",
+    trendRange: "Trend Chart Time Range",
+    trendRange24h: "24 Hours",
+    trendRange1w: "1 Week",
+    trendRange1m: "1 Month",
   },
 };

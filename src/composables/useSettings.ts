@@ -7,6 +7,7 @@ export function useSettings() {
     refresh_interval_secs: 180,
     launch_at_login: false,
     language: "zh-CN",
+    trend_range: "24h",
   });
 
   async function loadSettings() {

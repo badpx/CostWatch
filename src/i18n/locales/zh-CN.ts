@@ -88,5 +88,9 @@ export default {
     language: "语言",
     languageZh: "简体中文",
     languageEn: "English",
+    trendRange: "趋势图时间范围",
+    trendRange24h: "24 小时",
+    trendRange1w: "1 周",
+    trendRange1m: "1 个月",
   },
 };

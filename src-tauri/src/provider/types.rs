@@ -199,6 +199,10 @@ fn default_language() -> String {
     "zh-CN".to_string()
 }
 
+fn default_trend_range() -> String {
+    "24h".to_string()
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneralSettings {
     #[serde(default = "default_refresh_interval")]
@@ -207,6 +211,8 @@ pub struct GeneralSettings {
     pub launch_at_login: bool,
     #[serde(default = "default_language")]
     pub language: String,
+    #[serde(default = "default_trend_range")]
+    pub trend_range: String,
 }
 
 impl Default for GeneralSettings {
@@ -215,6 +221,7 @@ impl Default for GeneralSettings {
             refresh_interval_secs: 180,
             launch_at_login: false,
             language: "zh-CN".to_string(),
+            trend_range: "24h".to_string(),
         }
     }
 }

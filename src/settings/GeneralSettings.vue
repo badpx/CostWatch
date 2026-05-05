@@ -3,14 +3,10 @@
     <h3 class="section-title">{{ $t('generalSettings.title') }}</h3>
 
     <div class="setting-item">
-      <label class="setting-label">{{ $t('generalSettings.refreshInterval') }}</label>
-      <select v-model="localSettings.refresh_interval_secs" @change="save" class="setting-select">
-        <option :value="60">{{ $t('generalSettings.minute_1') }}</option>
-        <option :value="120">{{ $t('generalSettings.minute_2') }}</option>
-        <option :value="180">{{ $t('generalSettings.minute_3') }}</option>
-        <option :value="300">{{ $t('generalSettings.minute_5') }}</option>
-        <option :value="600">{{ $t('generalSettings.minute_10') }}</option>
-        <option :value="1800">{{ $t('generalSettings.minute_30') }}</option>
+      <label class="setting-label">{{ $t('generalSettings.language') }}</label>
+      <select v-model="localSettings.language" @change="onLanguageChange" class="setting-select">
+        <option value="zh-CN">{{ $t('generalSettings.languageZh') }}</option>
+        <option value="en">{{ $t('generalSettings.languageEn') }}</option>
       </select>
     </div>
 
@@ -25,10 +21,23 @@
     </div>
 
     <div class="setting-item">
-      <label class="setting-label">{{ $t('generalSettings.language') }}</label>
-      <select v-model="localSettings.language" @change="onLanguageChange" class="setting-select">
-        <option value="zh-CN">{{ $t('generalSettings.languageZh') }}</option>
-        <option value="en">{{ $t('generalSettings.languageEn') }}</option>
+      <label class="setting-label">{{ $t('generalSettings.refreshInterval') }}</label>
+      <select v-model="localSettings.refresh_interval_secs" @change="save" class="setting-select">
+        <option :value="60">{{ $t('generalSettings.minute_1') }}</option>
+        <option :value="120">{{ $t('generalSettings.minute_2') }}</option>
+        <option :value="180">{{ $t('generalSettings.minute_3') }}</option>
+        <option :value="300">{{ $t('generalSettings.minute_5') }}</option>
+        <option :value="600">{{ $t('generalSettings.minute_10') }}</option>
+        <option :value="1800">{{ $t('generalSettings.minute_30') }}</option>
+      </select>
+    </div>
+
+    <div class="setting-item">
+      <label class="setting-label">{{ $t('generalSettings.trendRange') }}</label>
+      <select v-model="localSettings.trend_range" @change="save" class="setting-select">
+        <option value="24h">{{ $t('generalSettings.trendRange24h') }}</option>
+        <option value="1w">{{ $t('generalSettings.trendRange1w') }}</option>
+        <option value="1m">{{ $t('generalSettings.trendRange1m') }}</option>
       </select>
     </div>
   </div>
@@ -44,6 +53,7 @@ const localSettings = ref<GeneralSettings>({
   refresh_interval_secs: 180,
   launch_at_login: false,
   language: "zh-CN",
+  trend_range: "24h",
 });
 
 async function loadSettings() {
