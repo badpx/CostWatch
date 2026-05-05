@@ -187,6 +187,7 @@ pub fn run() {
             commands::get_settings,
             commands::save_settings,
             commands::show_settings_window,
+            commands::get_provider_history,
         ])
         .run(tauri::generate_context!())
         .expect("error while running CostWatch");

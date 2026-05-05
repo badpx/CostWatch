@@ -309,3 +309,11 @@ pub fn show_settings_window(app: tauri::AppHandle) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[tauri::command]
+pub fn get_provider_history(
+    provider_id: String,
+    range: String,
+) -> Result<Vec<crate::provider::history::HistoryPoint>, String> {
+    crate::provider::history::query_history(&provider_id, &range)
+}
