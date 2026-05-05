@@ -24,6 +24,7 @@ pub fn setup_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>
             }
             "settings" => {
                 if let Some(window) = app.get_webview_window("settings") {
+                    let _ = app.set_activation_policy(ActivationPolicy::Regular);
                     let _ = window.show();
                     let _ = window.set_focus();
                 }

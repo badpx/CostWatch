@@ -2,7 +2,9 @@ use crate::provider::fetcher;
 use crate::provider::plugin;
 use crate::provider::types::*;
 use crate::state::AppState;
+use tauri::ActivationPolicy;
 use tauri::Emitter;
+use tauri::Manager;
 use tauri_plugin_autostart::ManagerExt as AutostartExt;
 
 #[tauri::command]
@@ -295,5 +297,15 @@ pub async fn save_settings(
     crate::storage::save_settings(&settings)?;
     *state.settings.lock().unwrap() = settings;
     let _ = app.emit("settings-updated", ());
+    Ok(())
+}
+
+#[tauri::command]
+pub fn show_settings_window(app: tauri::AppHandle) -> Result<(), String> {
+    let _ = app.set_activation_policy(ActivationPolicy::Regular);
+    if let Some(w) = app.get_webview_window("settings") {
+        let _ = w.show();
+        let _ = w.set_focus();
+    }
     Ok(())
 }

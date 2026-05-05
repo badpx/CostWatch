@@ -8,6 +8,7 @@ use provider::plugin;
 use provider::registry::ProviderRegistry;
 use provider::types::{Currency, ProviderIcon, ProviderState, ProviderStatus};
 use state::AppState;
+use tauri::ActivationPolicy;
 use tauri::Emitter;
 use tauri::Manager;
 use tauri_plugin_autostart::ManagerExt as AutostartExt;
@@ -87,6 +88,7 @@ pub fn run() {
 
             // Show settings window on startup so it's always accessible
             if let Some(settings_window) = app.get_webview_window("settings") {
+                let _ = app.handle().set_activation_policy(ActivationPolicy::Regular);
                 let _ = settings_window.show();
             }
 
@@ -96,6 +98,7 @@ pub fn run() {
                     if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                         api.prevent_close();
                         if let Some(w) = app_handle_for_settings.get_webview_window("settings") {
+                            let _ = app_handle_for_settings.set_activation_policy(ActivationPolicy::Accessory);
                             let _ = w.hide();
                         }
                     }
@@ -164,6 +167,7 @@ pub fn run() {
             commands::remove_plugin,
             commands::get_settings,
             commands::save_settings,
+            commands::show_settings_window,
         ])
         .run(tauri::generate_context!())
         .expect("error while running CostWatch");

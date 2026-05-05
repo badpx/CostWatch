@@ -51,8 +51,8 @@ import { onMounted, onUnmounted, computed, ref } from "vue";
 import ProviderCard from "./ProviderCard.vue";
 import { useProviders } from "../composables/useProviders";
 import { useSettings } from "../composables/useSettings";
-import { getAllWebviewWindows } from "@tauri-apps/api/webviewWindow";
 import { listen, emit } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 import { getVersion } from "@tauri-apps/api/app";
 import i18n from "../i18n";
 
@@ -76,13 +76,8 @@ const configuredProviders = computed(() =>
 );
 
 async function openSettings() {
-  const windows = await getAllWebviewWindows();
-  const settingsWindow = windows.find((w: { label: string }) => w.label === "settings");
-  if (settingsWindow) {
-    await emit("navigate-to-tab", { tab: "providers" });
-    await settingsWindow.show();
-    await settingsWindow.setFocus();
-  }
+  await emit("navigate-to-tab", { tab: "providers" });
+  await invoke("show_settings_window");
 }
 
 let unlistenSettings: (() => void) | null = null;
