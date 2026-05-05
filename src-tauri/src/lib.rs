@@ -7,6 +7,7 @@ mod tray;
 use provider::plugin;
 use provider::registry::ProviderRegistry;
 use provider::types::{Currency, ProviderIcon, ProviderState, ProviderStatus};
+use rust_decimal::prelude::ToPrimitive;
 use state::AppState;
 use tauri::ActivationPolicy;
 use tauri::Emitter;
@@ -164,6 +165,15 @@ pub fn run() {
                         )
                         .await;
                         result.has_token = true;
+
+                        // Record history if fetch succeeded and has a balance value
+                        if matches!(result.status, crate::provider::types::ProviderStatus::Ok) {
+                            if let Some(ref balance) = result.balance {
+                                let value = balance.to_f64().unwrap_or(0.0);
+                                let _ = crate::provider::history::record_history(id, value);
+                            }
+                        }
+
                         let mut providers = state.providers.lock().unwrap();
                         if let Some(pos) = providers.iter().position(|p| p.id == *id) {
                             providers[pos] = result;
