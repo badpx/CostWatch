@@ -32,7 +32,7 @@
       <div class="provider-actions">
         <template v-if="provider.has_token">
           <div class="token-display">
-            <span class="balance-value">{{ balanceText(provider) }}</span>
+            <span class="balance-value">{{ cachedBalanceText(provider) }}</span>
           </div>
           <div class="provider-actions-right">
             <button class="btn-test" @click="testConnection(provider.id)">
@@ -141,6 +141,19 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
     return currency === "USD" ? "$" : currency === "CNY" ? "¥" : currency === "EUR" ? "€" : "";
   }
   if (typeof currency === "object" && "Custom" in currency) return currency.Custom;
+  return "";
+}
+
+function cachedBalanceText(provider: ProviderState): string {
+  const text = balanceText(provider);
+  if (text) return text;
+  const data = historyData.value[provider.id];
+  if (data && data.length > 0) {
+    const lastValue = data[data.length - 1].value;
+    const currencySymbol = getCurrencySymbol(provider.currency);
+    const fmt = (v: number) => Number.isInteger(v) ? String(v) : v.toFixed(2);
+    return `${currencySymbol}${fmt(lastValue)}`;
+  }
   return "";
 }
 
