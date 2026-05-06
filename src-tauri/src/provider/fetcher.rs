@@ -304,3 +304,457 @@ fn format_auto(value: &serde_json::Value) -> String {
     }
     value.as_str().unwrap_or("").to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn minimal_config(display: DisplayConfig) -> ProviderConfig {
+        ProviderConfig {
+            name: "Test".to_string(),
+            icon: "test".to_string(),
+            api: ApiConfig {
+                url: "http://example.com".to_string(),
+                method: HttpMethod::Get,
+                headers: HashMap::new(),
+                body: None,
+            },
+            response: HashMap::new(),
+            display,
+        }
+    }
+
+    #[test]
+    fn test_currency_from_config_unit_prefix_usd() {
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{balance}}".to_string(),
+            unit_prefix: Some("$".to_string()),
+            unit: None,
+            progress: None,
+        });
+        assert_eq!(currency_from_config(&config), Currency::USD);
+    }
+
+    #[test]
+    fn test_currency_from_config_unit_prefix_cny() {
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{balance}}".to_string(),
+            unit_prefix: Some("¥".to_string()),
+            unit: None,
+            progress: None,
+        });
+        assert_eq!(currency_from_config(&config), Currency::CNY);
+    }
+
+    #[test]
+    fn test_currency_from_config_unit_prefix_eur() {
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{balance}}".to_string(),
+            unit_prefix: Some("€".to_string()),
+            unit: None,
+            progress: None,
+        });
+        assert_eq!(currency_from_config(&config), Currency::EUR);
+    }
+
+    #[test]
+    fn test_currency_from_config_unit_prefix_custom() {
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{balance}}".to_string(),
+            unit_prefix: Some("£".to_string()),
+            unit: None,
+            progress: None,
+        });
+        assert_eq!(currency_from_config(&config), Currency::Custom("£".to_string()));
+    }
+
+    #[test]
+    fn test_currency_from_config_static_unit() {
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{balance}}".to_string(),
+            unit_prefix: None,
+            unit: Some(UnitConfig::Static("₩".to_string())),
+            progress: None,
+        });
+        assert_eq!(currency_from_config(&config), Currency::Custom("₩".to_string()));
+    }
+
+    #[test]
+    fn test_currency_from_config_map_with_default() {
+        let mut map = HashMap::new();
+        map.insert("CNY".to_string(), "¥".to_string());
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{balance}}".to_string(),
+            unit_prefix: None,
+            unit: Some(UnitConfig::Map {
+                field: "currency".to_string(),
+                map,
+                default: Some("¥".to_string()),
+            }),
+            progress: None,
+        });
+        assert_eq!(currency_from_config(&config), Currency::CNY);
+    }
+
+    #[test]
+    fn test_currency_from_config_map_without_default() {
+        let mut map = HashMap::new();
+        map.insert("USD".to_string(), "$".to_string());
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{balance}}".to_string(),
+            unit_prefix: None,
+            unit: Some(UnitConfig::Map {
+                field: "currency".to_string(),
+                map,
+                default: None,
+            }),
+            progress: None,
+        });
+        assert_eq!(currency_from_config(&config), Currency::default());
+    }
+
+    #[test]
+    fn test_currency_from_config_none() {
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{balance}}".to_string(),
+            unit_prefix: None,
+            unit: None,
+            progress: None,
+        });
+        assert_eq!(currency_from_config(&config), Currency::default());
+    }
+
+    #[test]
+    fn test_symbol_to_currency_known() {
+        assert_eq!(symbol_to_currency("$"), Currency::USD);
+        assert_eq!(symbol_to_currency("¥"), Currency::CNY);
+        assert_eq!(symbol_to_currency("€"), Currency::EUR);
+    }
+
+    #[test]
+    fn test_symbol_to_currency_unknown() {
+        assert_eq!(symbol_to_currency("₩"), Currency::Custom("₩".to_string()));
+    }
+
+    #[test]
+    fn test_determine_currency_with_api_response() {
+        let mut map = HashMap::new();
+        map.insert("USD".to_string(), "$".to_string());
+        map.insert("CNY".to_string(), "¥".to_string());
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{balance}}".to_string(),
+            unit_prefix: None,
+            unit: Some(UnitConfig::Map {
+                field: "currency".to_string(),
+                map,
+                default: Some("$".to_string()),
+            }),
+            progress: None,
+        });
+        let mut fields = HashMap::new();
+        fields.insert("currency".to_string(), serde_json::json!("CNY"));
+        assert_eq!(determine_currency(&config, &fields), Currency::CNY);
+    }
+
+    #[test]
+    fn test_determine_currency_fallback_to_default() {
+        let mut map = HashMap::new();
+        map.insert("USD".to_string(), "$".to_string());
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{balance}}".to_string(),
+            unit_prefix: None,
+            unit: Some(UnitConfig::Map {
+                field: "currency".to_string(),
+                map,
+                default: Some("¥".to_string()),
+            }),
+            progress: None,
+        });
+        let fields = HashMap::new(); // missing currency field
+        assert_eq!(determine_currency(&config, &fields), Currency::CNY);
+    }
+
+    #[test]
+    fn test_determine_currency_fallback_to_usd_when_no_default() {
+        let mut map = HashMap::new();
+        map.insert("USD".to_string(), "$".to_string());
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{balance}}".to_string(),
+            unit_prefix: None,
+            unit: Some(UnitConfig::Map {
+                field: "currency".to_string(),
+                map,
+                default: None,
+            }),
+            progress: None,
+        });
+        let fields = HashMap::new();
+        assert_eq!(determine_currency(&config, &fields), Currency::default());
+    }
+
+    #[test]
+    fn test_resolve_currency_unit_from_api() {
+        let mut map = HashMap::new();
+        map.insert("CNY".to_string(), "¥".to_string());
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{balance}}".to_string(),
+            unit_prefix: None,
+            unit: Some(UnitConfig::Map {
+                field: "currency".to_string(),
+                map,
+                default: Some("$".to_string()),
+            }),
+            progress: None,
+        });
+        let mut fields = HashMap::new();
+        fields.insert("currency".to_string(), serde_json::json!("CNY"));
+        assert_eq!(resolve_currency_unit(&config, &fields), "¥");
+    }
+
+    #[test]
+    fn test_resolve_currency_unit_fallback_default() {
+        let mut map = HashMap::new();
+        map.insert("USD".to_string(), "$".to_string());
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{balance}}".to_string(),
+            unit_prefix: None,
+            unit: Some(UnitConfig::Map {
+                field: "currency".to_string(),
+                map,
+                default: Some("¥".to_string()),
+            }),
+            progress: None,
+        });
+        let fields = HashMap::new();
+        assert_eq!(resolve_currency_unit(&config, &fields), "¥");
+    }
+
+    #[test]
+    fn test_resolve_currency_unit_prefix() {
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{balance}}".to_string(),
+            unit_prefix: Some("€".to_string()),
+            unit: None,
+            progress: None,
+        });
+        let fields = HashMap::new();
+        assert_eq!(resolve_currency_unit(&config, &fields), "€");
+    }
+
+    // Builtin provider startup currency tests
+    #[test]
+    fn test_openrouter_startup_currency_is_usd() {
+        let config = crate::provider::builtin::openrouter::config();
+        assert_eq!(currency_from_config(&config), Currency::USD);
+    }
+
+    #[test]
+    fn test_deepseek_startup_currency_is_cny() {
+        let config = crate::provider::builtin::deepseek::config();
+        assert_eq!(currency_from_config(&config), Currency::CNY);
+    }
+
+    #[test]
+    fn test_deepinfra_startup_currency_is_usd() {
+        let config = crate::provider::builtin::deepinfra::config();
+        assert_eq!(currency_from_config(&config), Currency::USD);
+    }
+
+    #[test]
+    fn test_runware_startup_currency_is_usd() {
+        let config = crate::provider::builtin::runware::config();
+        assert_eq!(currency_from_config(&config), Currency::USD);
+    }
+
+    #[test]
+    fn test_kimi_startup_currency_is_cny() {
+        let config = crate::provider::builtin::kimi::config();
+        assert_eq!(currency_from_config(&config), Currency::CNY);
+    }
+
+    // get_decimal_field tests
+    #[test]
+    fn test_get_decimal_field_from_number() {
+        let mut fields = HashMap::new();
+        fields.insert("balance".to_string(), serde_json::json!(123.45));
+        let result = get_decimal_field(&fields, "balance").unwrap();
+        assert_eq!(result, Decimal::try_from(123.45f64).unwrap());
+    }
+
+    #[test]
+    fn test_get_decimal_field_from_string_number() {
+        let mut fields = HashMap::new();
+        fields.insert("balance".to_string(), serde_json::json!("99.99"));
+        let result = get_decimal_field(&fields, "balance").unwrap();
+        assert_eq!(result, Decimal::from_str_radix("99.99", 10).unwrap());
+    }
+
+    #[test]
+    fn test_get_decimal_field_from_null() {
+        let mut fields = HashMap::new();
+        fields.insert("balance".to_string(), serde_json::Value::Null);
+        assert!(get_decimal_field(&fields, "balance").is_none());
+    }
+
+    #[test]
+    fn test_get_decimal_field_from_non_numeric_string() {
+        let mut fields = HashMap::new();
+        fields.insert("balance".to_string(), serde_json::json!("not_a_number"));
+        assert!(get_decimal_field(&fields, "balance").is_none());
+    }
+
+    #[test]
+    fn test_get_decimal_field_missing_key() {
+        let fields = HashMap::new();
+        assert!(get_decimal_field(&fields, "balance").is_none());
+    }
+
+    // format_decimal tests
+    #[test]
+    fn test_format_decimal_two_places() {
+        assert_eq!(format_decimal(123.456), "123.46");
+    }
+
+    #[test]
+    fn test_format_decimal_whole_number() {
+        assert_eq!(format_decimal(100.0), "100.00");
+    }
+
+    #[test]
+    fn test_format_decimal_small_value() {
+        assert_eq!(format_decimal(0.005), "0.01");
+    }
+
+    // format_field_value tests
+    #[test]
+    fn test_format_field_value_string_type() {
+        let mapping = FieldMapping {
+            path: None,
+            value: None,
+            expr: None,
+            field_type: FieldType::String,
+        };
+        assert_eq!(format_field_value(&serde_json::json!("hello"), Some(&mapping)), "hello");
+    }
+
+    #[test]
+    fn test_format_field_value_number_type() {
+        let mapping = FieldMapping {
+            path: None,
+            value: None,
+            expr: None,
+            field_type: FieldType::Number,
+        };
+        assert_eq!(format_field_value(&serde_json::json!(42.5), Some(&mapping)), "42.50");
+    }
+
+    #[test]
+    fn test_format_field_value_string_number_type_from_string() {
+        let mapping = FieldMapping {
+            path: None,
+            value: None,
+            expr: None,
+            field_type: FieldType::StringNumber,
+        };
+        assert_eq!(format_field_value(&serde_json::json!("3.14"), Some(&mapping)), "3.14");
+    }
+
+    #[test]
+    fn test_format_field_value_boolean_type() {
+        let mapping = FieldMapping {
+            path: None,
+            value: None,
+            expr: None,
+            field_type: FieldType::Boolean,
+        };
+        assert_eq!(format_field_value(&serde_json::json!(true), Some(&mapping)), "true");
+    }
+
+    #[test]
+    fn test_format_field_value_auto_number() {
+        assert_eq!(format_field_value(&serde_json::json!(7.5), None), "7.50");
+    }
+
+    #[test]
+    fn test_format_field_value_auto_string() {
+        assert_eq!(format_field_value(&serde_json::json!("text"), None), "text");
+    }
+
+    // resolve_display_label tests
+    #[test]
+    fn test_resolve_display_label_simple_template() {
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{currency_unit}}{{balance}}".to_string(),
+            unit_prefix: Some("$".to_string()),
+            unit: None,
+            progress: None,
+        });
+        let mut fields = HashMap::new();
+        fields.insert("balance".to_string(), serde_json::json!(42.50));
+        let label = resolve_display_label(&config, &fields);
+        assert_eq!(label, "$42.50");
+    }
+
+    #[test]
+    fn test_resolve_display_label_multiple_placeholders() {
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{currency_unit}}{{balance}} / {{currency_unit}}{{available}}".to_string(),
+            unit_prefix: Some("¥".to_string()),
+            unit: None,
+            progress: None,
+        });
+        let mut fields = HashMap::new();
+        fields.insert("balance".to_string(), serde_json::json!(10.0));
+        fields.insert("available".to_string(), serde_json::json!(100.0));
+        let label = resolve_display_label(&config, &fields);
+        assert_eq!(label, "¥10.00 / ¥100.00");
+    }
+
+    #[test]
+    fn test_resolve_display_label_no_currency_unit() {
+        let config = minimal_config(DisplayConfig {
+            primary: "balance".to_string(),
+            secondary: None,
+            label: "{{balance}}".to_string(),
+            unit_prefix: None,
+            unit: None,
+            progress: None,
+        });
+        let mut fields = HashMap::new();
+        fields.insert("balance".to_string(), serde_json::json!(5.0));
+        let label = resolve_display_label(&config, &fields);
+        assert_eq!(label, "5.00");
+    }
+}

@@ -339,4 +339,161 @@ display:
         let result = evaluate_expression("0 - stripe_balance", &fields).unwrap();
         assert!((result - 5.25).abs() < 0.001);
     }
+
+    // extract_fields tests
+    #[test]
+    fn test_extract_fields_jsonpath() {
+        let yaml = r#"
+name: Test
+icon: test
+api:
+  url: https://example.com
+response:
+  balance:
+    path: "$.data.balance"
+    type: number
+display:
+  primary: balance
+  label: "{{balance}}"
+"#;
+        let config = parse_provider_config(yaml).unwrap();
+        let json = serde_json::json!({"data": {"balance": 42.5}});
+        let fields = extract_fields(&json, &config).unwrap();
+        assert_eq!(fields["balance"], serde_json::json!(42.5));
+    }
+
+    #[test]
+    fn test_extract_fields_fixed_value() {
+        let yaml = r#"
+name: Test
+icon: test
+api:
+  url: https://example.com
+response:
+  currency:
+    value: "USD"
+    type: string
+display:
+  primary: currency
+  label: "{{currency}}"
+"#;
+        let config = parse_provider_config(yaml).unwrap();
+        let json = serde_json::json!({});
+        let fields = extract_fields(&json, &config).unwrap();
+        assert_eq!(fields["currency"], serde_json::json!("USD"));
+    }
+
+    #[test]
+    fn test_extract_fields_expression() {
+        let yaml = r#"
+name: Test
+icon: test
+api:
+  url: https://example.com
+response:
+  total_credits:
+    path: "$.data.total"
+    type: number
+  total_usage:
+    path: "$.data.used"
+    type: number
+  balance:
+    expr: "total_credits - total_usage"
+    type: number
+display:
+  primary: balance
+  label: "{{balance}}"
+"#;
+        let config = parse_provider_config(yaml).unwrap();
+        let json = serde_json::json!({"data": {"total": 100.0, "used": 30.0}});
+        let fields = extract_fields(&json, &config).unwrap();
+        assert_eq!(fields["balance"].as_f64().unwrap(), 70.0);
+    }
+
+    #[test]
+    fn test_extract_fields_jsonpath_missing() {
+        let yaml = r#"
+name: Test
+icon: test
+api:
+  url: https://example.com
+response:
+  balance:
+    path: "$.data.balance"
+    type: number
+display:
+  primary: balance
+  label: "{{balance}}"
+"#;
+        let config = parse_provider_config(yaml).unwrap();
+        let json = serde_json::json!({"data": {}});
+        let fields = extract_fields(&json, &config).unwrap();
+        assert!(fields["balance"].is_null());
+    }
+
+    #[test]
+    fn test_extract_fields_expression_with_null_field() {
+        let yaml = r#"
+name: Test
+icon: test
+api:
+  url: https://example.com
+response:
+  total_credits:
+    path: "$.data.total"
+    type: number
+  total_usage:
+    path: "$.data.used"
+    type: number
+  balance:
+    expr: "total_credits - total_usage"
+    type: number
+display:
+  primary: balance
+  label: "{{balance}}"
+"#;
+        let config = parse_provider_config(yaml).unwrap();
+        let json = serde_json::json!({"data": {"total": 100.0}}); // used missing
+        let fields = extract_fields(&json, &config).unwrap();
+        assert!(fields["balance"].is_null());
+    }
+
+    #[test]
+    fn test_validate_empty_url() {
+        let yaml = r#"
+name: Test
+icon: test
+api:
+  url: ""
+response:
+  balance:
+    path: "$.data.balance"
+    type: number
+display:
+  primary: balance
+  label: "{{balance}}"
+"#;
+        let result = parse_provider_config(yaml);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("api.url is required"));
+    }
+
+    #[test]
+    fn test_validate_field_without_path_value_or_expr() {
+        let yaml = r#"
+name: Test
+icon: test
+api:
+  url: https://example.com
+response:
+  balance:
+    type: number
+display:
+  primary: balance
+  label: "{{balance}}"
+"#;
+        let result = parse_provider_config(yaml);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("must have at least one of"));
+    }
 }

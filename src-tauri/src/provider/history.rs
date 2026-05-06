@@ -95,3 +95,39 @@ pub fn record_history(provider_id: &str, value: f64) -> Result<(), String> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rust_decimal::Decimal;
+
+    #[test]
+    fn test_range_to_days() {
+        assert_eq!(range_to_days("24h"), "-1 days");
+        assert_eq!(range_to_days("3d"), "-3 days");
+        assert_eq!(range_to_days("1w"), "-7 days");
+        assert_eq!(range_to_days("1m"), "-30 days");
+        assert_eq!(range_to_days("unknown"), "-7 days");
+    }
+
+    #[test]
+    fn test_get_primary_value_prefers_balance() {
+        let balance = Some(Decimal::new(12345, 2)); // 123.45
+        let available = Some(Decimal::new(9999, 2)); // 99.99
+        assert_eq!(get_primary_value(&balance, &available), Some(123.45));
+    }
+
+    #[test]
+    fn test_get_primary_value_falls_back_to_available() {
+        let balance: Option<Decimal> = None;
+        let available = Some(Decimal::new(7777, 2)); // 77.77
+        assert_eq!(get_primary_value(&balance, &available), Some(77.77));
+    }
+
+    #[test]
+    fn test_get_primary_value_none_when_both_missing() {
+        let balance: Option<Decimal> = None;
+        let available: Option<Decimal> = None;
+        assert_eq!(get_primary_value(&balance, &available), None);
+    }
+}

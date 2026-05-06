@@ -53,7 +53,7 @@ pub enum ProviderIcon {
     Custom(String),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Currency {
     USD,
     CNY,
@@ -75,6 +75,24 @@ impl Currency {
 impl Default for Currency {
     fn default() -> Self {
         Currency::USD
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_currency_symbol() {
+        assert_eq!(Currency::USD.symbol(), "$");
+        assert_eq!(Currency::CNY.symbol(), "¥");
+        assert_eq!(Currency::EUR.symbol(), "€");
+        assert_eq!(Currency::Custom("₩".to_string()).symbol(), "₩");
+    }
+
+    #[test]
+    fn test_currency_default_is_usd() {
+        assert_eq!(Currency::default(), Currency::USD);
     }
 }
 

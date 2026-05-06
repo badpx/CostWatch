@@ -7,6 +7,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, nextTick } from "vue";
 import type { HistoryPoint, ProviderState } from "../types";
+import { rangeToMs, formatVal, getCurrencySymbol } from "../utils/chart";
 
 const props = defineProps<{
   dataPoints: HistoryPoint[];
@@ -86,8 +87,8 @@ function draw() {
   ctx.fillStyle = labelColor;
   ctx.font = "9px -apple-system, sans-serif";
   ctx.textAlign = "left";
-  ctx.fillText(formatVal(maxVal), 2, toY(maxVal) - 3);
-  ctx.fillText(formatVal(minVal), 2, toY(minVal) - 3);
+  ctx.fillText(formatVal(maxVal, props.currency), 2, toY(maxVal) - 3);
+  ctx.fillText(formatVal(minVal, props.currency), 2, toY(minVal) - 3);
 
   if (points.length === 1) {
     const x = toX(0);
@@ -130,28 +131,6 @@ function draw() {
   ctx.stroke(new Path2D(linePath));
 }
 
-function rangeToMs(range: string): number {
-  switch (range) {
-    case "24h": return 24 * 60 * 60 * 1000;
-    case "1w": return 7 * 24 * 60 * 60 * 1000;
-    case "1m": return 30 * 24 * 60 * 60 * 1000;
-    default: return 7 * 24 * 60 * 60 * 1000;
-  }
-}
-
-function formatVal(v: number): string {
-  const sym = getCurrencySymbol(props.currency);
-  if (Math.abs(v) >= 1000) return `${sym}${(v / 1000).toFixed(1)}k`;
-  return `${sym}${v.toFixed(v < 10 ? 2 : 0)}`;
-}
-
-function getCurrencySymbol(currency: ProviderState["currency"]): string {
-  if (typeof currency === "string") {
-    return currency === "USD" ? "$" : currency === "CNY" ? "¥" : currency === "EUR" ? "€" : "";
-  }
-  if (typeof currency === "object" && "Custom" in currency) return currency.Custom;
-  return "";
-}
 
 onMounted(() => {
   nextTick(draw);
