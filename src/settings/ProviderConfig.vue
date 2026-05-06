@@ -70,7 +70,7 @@
         :class="{ expanded: trendExpanded[provider.id] }"
       >
         <div class="trend-section">
-          <TrendChart :dataPoints="historyData[provider.id] || []" :range="trendRange" />
+          <TrendChart :dataPoints="historyData[provider.id] || []" :range="trendRange" :currency="provider.currency" />
         </div>
       </div>
     </div>

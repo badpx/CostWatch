@@ -6,11 +6,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, nextTick } from "vue";
-import type { HistoryPoint } from "../types";
+import type { HistoryPoint, ProviderState } from "../types";
 
 const props = defineProps<{
   dataPoints: HistoryPoint[];
   range: string;
+  currency: ProviderState["currency"];
 }>();
 
 const containerRef = ref<HTMLDivElement>();
@@ -138,8 +139,17 @@ function rangeToMs(range: string): number {
 }
 
 function formatVal(v: number): string {
-  if (Math.abs(v) >= 1000) return `$${(v / 1000).toFixed(1)}k`;
-  return `$${v.toFixed(v < 10 ? 2 : 0)}`;
+  const sym = getCurrencySymbol(props.currency);
+  if (Math.abs(v) >= 1000) return `${sym}${(v / 1000).toFixed(1)}k`;
+  return `${sym}${v.toFixed(v < 10 ? 2 : 0)}`;
+}
+
+function getCurrencySymbol(currency: ProviderState["currency"]): string {
+  if (typeof currency === "string") {
+    return currency === "USD" ? "$" : currency === "CNY" ? "¥" : currency === "EUR" ? "€" : "";
+  }
+  if (typeof currency === "object" && "Custom" in currency) return currency.Custom;
+  return "";
 }
 
 onMounted(() => {

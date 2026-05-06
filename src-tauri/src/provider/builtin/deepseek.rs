@@ -37,6 +37,7 @@ display:
     map:
       CNY: "¥"
       USD: "$"
+    default: "¥"
 "#;
     crate::provider::config_parser::parse_provider_config(yaml)
         .expect("DeepSeek builtin config should parse correctly")

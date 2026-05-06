@@ -155,6 +155,8 @@ pub enum UnitConfig {
     Map {
         field: String,
         map: HashMap<String, String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        default: Option<String>,
     },
 }
 

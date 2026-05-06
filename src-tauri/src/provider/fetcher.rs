@@ -144,6 +144,36 @@ fn get_decimal_field(
     })
 }
 
+/// Derive currency from config alone (no API response needed).
+/// Used at startup to show the correct symbol before the first fetch.
+pub fn currency_from_config(config: &ProviderConfig) -> Currency {
+    if let Some(ref unit_config) = config.display.unit {
+        match unit_config {
+            UnitConfig::Static(s) => Currency::Custom(s.clone()),
+            UnitConfig::Map { default: Some(d), .. } => symbol_to_currency(d),
+            UnitConfig::Map { .. } => Currency::default(),
+        }
+    } else if let Some(ref prefix) = config.display.unit_prefix {
+        match prefix.as_str() {
+            "$" => Currency::USD,
+            "¥" => Currency::CNY,
+            "€" => Currency::EUR,
+            _ => Currency::Custom(prefix.clone()),
+        }
+    } else {
+        Currency::default()
+    }
+}
+
+fn symbol_to_currency(s: &str) -> Currency {
+    match s {
+        "$" => Currency::USD,
+        "¥" => Currency::CNY,
+        "€" => Currency::EUR,
+        _ => Currency::Custom(s.to_string()),
+    }
+}
+
 fn determine_currency(
     config: &ProviderConfig,
     fields: &HashMap<String, serde_json::Value>,
@@ -151,7 +181,7 @@ fn determine_currency(
     if let Some(ref unit_config) = config.display.unit {
         match unit_config {
             UnitConfig::Static(s) => Currency::Custom(s.clone()),
-            UnitConfig::Map { field, map } => {
+            UnitConfig::Map { field, map, default } => {
                 if let Some(value) = fields.get(field) {
                     if let Some(currency_str) = value.as_str() {
                         if let Some(_symbol) = map.get(currency_str) {
@@ -164,7 +194,11 @@ fn determine_currency(
                         }
                     }
                 }
-                Currency::default()
+                if let Some(ref d) = default {
+                    symbol_to_currency(d)
+                } else {
+                    Currency::default()
+                }
             }
         }
     } else if let Some(ref prefix) = config.display.unit_prefix {
@@ -214,7 +248,7 @@ fn resolve_currency_unit(
     if let Some(ref unit_config) = config.display.unit {
         match unit_config {
             UnitConfig::Static(s) => s.clone(),
-            UnitConfig::Map { field, map } => {
+            UnitConfig::Map { field, map, default } => {
                 if let Some(value) = fields.get(field) {
                     if let Some(key) = value.as_str() {
                         if let Some(symbol) = map.get(key) {
@@ -222,7 +256,7 @@ fn resolve_currency_unit(
                         }
                     }
                 }
-                String::new()
+                default.clone().unwrap_or_default()
             }
         }
     } else if let Some(ref prefix) = config.display.unit_prefix {

@@ -27,7 +27,7 @@
         v-if="provider.has_token"
         class="trend-section"
       >
-        <TrendChart :dataPoints="historyData[provider.id] || []" :range="trendRange" />
+        <TrendChart :dataPoints="historyData[provider.id] || []" :range="trendRange" :currency="provider.currency" />
       </div>
       <div class="provider-actions">
         <template v-if="provider.has_token">

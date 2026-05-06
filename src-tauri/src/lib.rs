@@ -86,7 +86,7 @@ pub fn run() {
                         balance: None,
                         used: None,
                         available: None,
-                        currency: Currency::default(),
+                        currency: provider::fetcher::currency_from_config(config),
                         is_available: None,
                         extra_fields: Default::default(),
                         display_label: None,
