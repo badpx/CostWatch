@@ -4,7 +4,6 @@ import type { ProviderState } from "../types";
 
 const providers = ref<ProviderState[]>([]);
 const initialized = ref(false);
-let refreshInterval: ReturnType<typeof setInterval> | null = null;
 
 export function useProviders() {
   const loading = ref(false);
@@ -48,19 +47,6 @@ export function useProviders() {
     }
   }
 
-  function startAutoRefresh(intervalMs: number) {
-    stopAutoRefresh();
-    refreshAll();
-    refreshInterval = setInterval(() => refreshAll(), intervalMs);
-  }
-
-  function stopAutoRefresh() {
-    if (refreshInterval) {
-      clearInterval(refreshInterval);
-      refreshInterval = null;
-    }
-  }
-
   return {
     providers,
     initialized,
@@ -69,7 +55,5 @@ export function useProviders() {
     fetchProviders,
     refreshAll,
     refreshProvider,
-    startAutoRefresh,
-    stopAutoRefresh,
   };
 }

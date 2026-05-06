@@ -169,8 +169,7 @@ pub async fn refresh_provider(
     Ok(result)
 }
 
-#[tauri::command]
-pub async fn refresh_all(state: tauri::State<'_, AppState>) -> Result<(), String> {
+pub async fn refresh_all_internal(state: &AppState) -> Result<(), String> {
     let configs = state.configs.lock().unwrap().clone();
     let tokens = crate::storage::load_tokens()?;
 
@@ -225,6 +224,16 @@ pub async fn refresh_all(state: tauri::State<'_, AppState>) -> Result<(), String
     }
 
     *state.providers.lock().unwrap() = updated_providers;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn refresh_all(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, AppState>,
+) -> Result<(), String> {
+    refresh_all_internal(&state).await?;
+    let _ = app.emit("providers-updated", ());
     Ok(())
 }
 

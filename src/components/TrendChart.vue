@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, nextTick } from "vue";
 import type { HistoryPoint, ProviderState } from "../types";
-import { rangeToMs, formatVal, getCurrencySymbol } from "../utils/chart";
+import { rangeToMs, formatVal } from "../utils/chart";
 
 const props = defineProps<{
   dataPoints: HistoryPoint[];

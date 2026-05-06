@@ -65,8 +65,6 @@ const {
   fetchProviders,
   refreshAll,
   refreshProvider,
-  startAutoRefresh,
-  stopAutoRefresh,
 } = useProviders();
 
 const { settings, loadSettings } = useSettings();
@@ -86,7 +84,6 @@ let unlistenProviders: (() => void) | null = null;
 onMounted(async () => {
   version.value = await getVersion();
   await loadSettings();
-  startAutoRefresh(settings.value.refresh_interval_secs * 1000);
 
   unlistenSettings = await listen("settings-updated", async () => {
     await loadSettings();
@@ -94,7 +91,6 @@ onMounted(async () => {
     if (lang && (lang === "zh-CN" || lang === "en")) {
       (i18n.global.locale as any).value = lang;
     }
-    startAutoRefresh(settings.value.refresh_interval_secs * 1000);
   });
 
   unlistenProviders = await listen("providers-updated", async () => {
@@ -103,7 +99,6 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  stopAutoRefresh();
   if (unlistenSettings) {
     unlistenSettings();
     unlistenSettings = null;

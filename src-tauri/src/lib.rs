@@ -146,32 +146,28 @@ pub fn run() {
 
             let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
+                // Initial delay to let the app fully initialize
                 tokio::time::sleep(std::time::Duration::from_millis(300)).await;
-                let state = app_handle.state::<AppState>();
-                let configs = state.configs.lock().unwrap().clone();
-                let tokens = match crate::storage::load_tokens() {
-                    Ok(t) => t,
-                    Err(_) => return,
-                };
-                for (id, config) in &configs {
-                    if let Some(token_entry) = tokens.providers.get(id) {
-                        if !token_entry.enabled {
-                            continue;
-                        }
-                        let is_builtin = !id.starts_with("plugin-");
-                        let mut result = crate::provider::fetcher::fetch_provider(
-                            config, id, &token_entry.token, is_builtin,
-                        )
-                        .await;
-                        result.has_token = true;
 
-                        let mut providers = state.providers.lock().unwrap();
-                        if let Some(pos) = providers.iter().position(|p| p.id == *id) {
-                            providers[pos] = result;
-                        }
-                    }
-                }
+                let state = app_handle.state::<AppState>();
+
+                // Initial refresh on startup
+                let _ = crate::commands::refresh_all_internal(&state).await;
                 let _ = app_handle.emit("providers-updated", ());
+
+                // Periodic refresh loop — runs independently of any frontend window
+                loop {
+                    let interval_secs = {
+                        let state = app_handle.state::<AppState>();
+                        let secs = state.settings.lock().unwrap().refresh_interval_secs;
+                        secs
+                    };
+                    tokio::time::sleep(std::time::Duration::from_secs(interval_secs)).await;
+
+                    let state = app_handle.state::<AppState>();
+                    let _ = crate::commands::refresh_all_internal(&state).await;
+                    let _ = app_handle.emit("providers-updated", ());
+                }
             });
 
             Ok(())
