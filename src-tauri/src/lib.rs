@@ -165,16 +165,6 @@ pub fn run() {
                         .await;
                         result.has_token = true;
 
-                        // Record history if fetch succeeded
-                        if matches!(result.status, crate::provider::types::ProviderStatus::Ok) {
-                            if let Some(value) = crate::provider::history::get_primary_value(
-                                &result.balance,
-                                &result.available,
-                            ) {
-                                let _ = crate::provider::history::record_history(id, value);
-                            }
-                        }
-
                         let mut providers = state.providers.lock().unwrap();
                         if let Some(pos) = providers.iter().position(|p| p.id == *id) {
                             providers[pos] = result;

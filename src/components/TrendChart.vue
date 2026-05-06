@@ -65,15 +65,17 @@ function draw() {
   const maxVal = Math.max(...values);
   const range = maxVal - minVal || 1;
 
-  // Time-based X axis: anchor to the selected time range
+  // Time-based X axis: anchor to the last data point's timestamp
   // recorded_at is UTC from SQLite datetime('now'), append 'Z' for correct JS parsing
   const timestamps = points.map((p) => new Date(p.recorded_at + "Z").getTime());
-  const tMax = Date.now();
+  // Anchor tMax to the last data point rather than Date.now() to avoid
+  // any drift between SQLite UTC timestamps and the JS clock, which can
+  // cause the line to fall short of the right edge on first render.
+  const tMax = timestamps[timestamps.length - 1];
   const tMin = tMax - rangeToMs(props.range);
   const tRange = tMax - tMin || 1;
 
   const toX = (i: number) => {
-    if (points.length === 1) return w / 2;
     const x = ((timestamps[i] - tMin) / tRange) * w;
     return Math.max(0, Math.min(w, x));
   };
@@ -88,13 +90,12 @@ function draw() {
   ctx.fillText(formatVal(minVal), 2, toY(minVal) - 3);
 
   if (points.length === 1) {
+    const x = toX(0);
     const y = toY(values[0]);
-    ctx.strokeStyle = "#4a9";
-    ctx.lineWidth = 1.5;
+    ctx.fillStyle = "#4a9";
     ctx.beginPath();
-    ctx.moveTo(toX(0) - 20, y);
-    ctx.lineTo(toX(0) + 20, y);
-    ctx.stroke();
+    ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+    ctx.fill();
     return;
   }
 
