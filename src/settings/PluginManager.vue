@@ -508,6 +508,7 @@ onUnmounted(() => {
   font-weight: 700;
   color: var(--text-heading);
   letter-spacing: -0.3px;
+  padding-left: 26px;
 }
 .provider-actions {
   display: flex;

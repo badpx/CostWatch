@@ -37,6 +37,7 @@ export default {
     deleteTokenTitle: "删除确认",
     deleteTokenOk: "删除",
     cancel: "取消",
+    toggleTrend: "展开/收起趋势图",
   },
   pluginManager: {
     title: "插件提供商",

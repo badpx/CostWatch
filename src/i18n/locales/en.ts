@@ -37,6 +37,7 @@ export default {
     deleteTokenTitle: "Delete Confirmation",
     deleteTokenOk: "Delete",
     cancel: "Cancel",
+    toggleTrend: "Toggle Trend Chart",
   },
   pluginManager: {
     title: "Plugin Providers",

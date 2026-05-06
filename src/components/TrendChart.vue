@@ -35,6 +35,11 @@ function draw() {
   if (!ctx) return;
   ctx.scale(dpr, dpr);
 
+  // Read theme-aware CSS variable for grid lines
+  const cs = getComputedStyle(container);
+  const gridColor = cs.getPropertyValue("--border").trim() || "rgba(255,255,255,0.06)";
+  const labelColor = cs.getPropertyValue("--text-tertiary").trim() || "#666";
+
   const points = props.dataPoints;
   const padY = 10;
   const chartH = h - padY * 2;
@@ -42,7 +47,7 @@ function draw() {
   ctx.clearRect(0, 0, w, h);
 
   // Grid lines (always drawn, even as skeleton)
-  ctx.strokeStyle = "rgba(255,255,255,0.06)";
+  ctx.strokeStyle = gridColor;
   ctx.lineWidth = 0.5;
   ctx.beginPath();
   ctx.moveTo(0, padY);
@@ -75,7 +80,7 @@ function draw() {
     padY + chartH - ((v - minVal) / range) * chartH;
 
   // Y-axis labels
-  ctx.fillStyle = "#666";
+  ctx.fillStyle = labelColor;
   ctx.font = "9px -apple-system, sans-serif";
   ctx.textAlign = "left";
   ctx.fillText(formatVal(maxVal), 2, toY(maxVal) - 3);

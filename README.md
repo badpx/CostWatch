@@ -30,6 +30,7 @@ pnpm tauri dev
 ### Build for Production
 
 ```bash
+pnpm install
 pnpm tauri build
 ```
 

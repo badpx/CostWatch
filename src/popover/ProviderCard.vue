@@ -232,10 +232,11 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
   margin-bottom: 4px;
 }
 .balance-label {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text-heading);
   letter-spacing: -0.3px;
+  padding-left: 24px;
 }
 .last-updated {
   font-size: 10px;
