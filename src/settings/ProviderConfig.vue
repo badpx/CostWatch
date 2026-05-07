@@ -214,6 +214,8 @@ async function saveToken(id: string) {
   await invoke("save_token", { providerId: id, token });
   tokenInputs.value[id] = "";
   await refreshData();
+  // Fetch data in background without blocking the UI
+  testConnection(id);
 }
 
 async function deleteToken(id: string) {

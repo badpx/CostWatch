@@ -23,36 +23,39 @@ pub async fn save_token(
 ) -> Result<(), String> {
     crate::storage::save_token(&provider_id, &token)?;
 
-    let config = {
-        let configs = state.configs.lock().unwrap();
-        configs.get(&provider_id).cloned()
-    };
-
-    if let Some(config) = config {
-        let token_entry = crate::storage::load_tokens()?
-            .providers
-            .get(&provider_id)
-            .cloned();
-        let is_builtin = !provider_id.starts_with("plugin-");
-
-        let token_str = token_entry
-            .as_ref()
-            .map(|t| t.token.as_str())
-            .unwrap_or("");
-
-        let fetched =
-            fetcher::fetch_provider(&config, &provider_id, token_str, is_builtin).await;
-
-        let mut fetched = fetched;
-        fetched.has_token = true;
-
-        let mut providers = state.providers.lock().unwrap();
-        if let Some(pos) = providers.iter().position(|p| p.id == provider_id) {
-            providers[pos] = fetched;
-        } else {
-            providers.push(fetched);
+    let mut providers = state.providers.lock().unwrap();
+    if let Some(pos) = providers.iter().position(|p| p.id == provider_id) {
+        providers[pos].has_token = true;
+        providers[pos].status = ProviderStatus::Fetching;
+    } else {
+        let config = state.configs.lock().unwrap().get(&provider_id).cloned();
+        if let Some(config) = config {
+            let is_builtin = !provider_id.starts_with("plugin-");
+            providers.push(ProviderState {
+                id: provider_id.clone(),
+                name: config.name.clone(),
+                icon: if is_builtin {
+                    ProviderIcon::Builtin(config.icon.clone())
+                } else {
+                    ProviderIcon::Custom(config.icon.clone())
+                },
+                is_builtin,
+                balance: None,
+                used: None,
+                available: None,
+                currency: Currency::default(),
+                is_available: None,
+                extra_fields: Default::default(),
+                display_label: None,
+                has_token: true,
+                has_progress: false,
+                status: ProviderStatus::Fetching,
+                last_updated: None,
+                error_message: None,
+            });
         }
     }
+    drop(providers);
 
     let _ = app.emit("providers-updated", ());
     Ok(())
