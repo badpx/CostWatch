@@ -9,10 +9,15 @@ export function rangeToMs(range: string): number {
   }
 }
 
-export function formatVal(v: number, currency: ProviderState["currency"]): string {
+export function formatVal(
+  v: number,
+  currency: ProviderState["currency"],
+  decimals?: number
+): string {
   const sym = getCurrencySymbol(currency);
   if (Math.abs(v) >= 1000) return `${sym}${(v / 1000).toFixed(1)}k`;
-  return `${sym}${v.toFixed(v < 10 ? 2 : 0)}`;
+  const d = decimals !== undefined ? decimals : v < 10 ? 2 : 0;
+  return `${sym}${v.toFixed(d)}`;
 }
 
 export function getCurrencySymbol(currency: ProviderState["currency"]): string {

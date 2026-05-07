@@ -7,3 +7,6 @@ target/
 
 # CostWatch specific
 .tokens.json
+
+# Claude code
+.claude

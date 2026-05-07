@@ -62,9 +62,21 @@ function draw() {
   if (points.length === 0) return;
 
   const values = points.map((p) => p.value);
-  const minVal = Math.min(...values);
-  const maxVal = Math.max(...values);
-  const range = maxVal - minVal || 1;
+  let minVal = Math.min(...values);
+  let maxVal = Math.max(...values);
+
+  // Round boundaries to integers for clean labels (e.g. 93.73 → 94 / 93)
+  maxVal = Math.ceil(maxVal);
+  minVal = Math.floor(minVal);
+  let range = maxVal - minVal;
+
+  // When data is pinned to a single integer (e.g. 93.00 → 93/93),
+  // expand symmetrically so tiny sub-unit fluctuations stay visually flat.
+  const MIN_VISIBLE_RANGE = 1;
+  if (range < MIN_VISIBLE_RANGE) {
+    maxVal = minVal + MIN_VISIBLE_RANGE;
+    range = MIN_VISIBLE_RANGE;
+  }
 
   // Time-based X axis: anchor to the last data point's timestamp
   // recorded_at is UTC from SQLite datetime('now'), append 'Z' for correct JS parsing

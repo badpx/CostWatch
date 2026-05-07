@@ -71,4 +71,9 @@ describe("formatVal", () => {
   it("handles negative values correctly", () => {
     expect(formatVal(-5.5, "USD")).toBe("$-5.50");
   });
+
+  it("respects explicit decimals parameter", () => {
+    expect(formatVal(93.73, "USD", 2)).toBe("$93.73");
+    expect(formatVal(93.73, "USD", 0)).toBe("$94");
+  });
 });

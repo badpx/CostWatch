@@ -3,7 +3,7 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     ActivationPolicy, Manager,
 };
-use tauri_plugin_positioner::{on_tray_event, Position, WindowExt};
+use tauri_plugin_positioner::on_tray_event;
 
 pub fn setup_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     app.set_activation_policy(ActivationPolicy::Accessory);
@@ -37,6 +37,7 @@ pub fn setup_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>
             if let TrayIconEvent::Click {
                 button: MouseButton::Left,
                 button_state: MouseButtonState::Up,
+                rect,
                 ..
             } = event
             {
@@ -44,7 +45,26 @@ pub fn setup_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>
                     if window.is_visible().unwrap_or(false) {
                         let _ = window.hide();
                     } else {
-                        let _ = window.move_window(Position::TrayCenter);
+                        // Manually compute TrayCenter to avoid
+                        // tauri-plugin-positioner's current_monitor().unwrap() panic.
+                        let tray_pos: tauri::PhysicalPosition<i32> = rect.position.to_physical(1.0);
+                        let tray_size: tauri::PhysicalSize<u32> = rect.size.to_physical(1.0);
+                        let tray_x = tray_pos.x;
+                        let tray_y = tray_pos.y;
+                        let tray_w = tray_size.width as i32;
+                        let tray_h = tray_size.height as i32;
+                        if let Ok(window_size) = window.outer_size() {
+                            let x = tray_x + tray_w / 2 - window_size.width as i32 / 2;
+                            let mut y = tray_y - window_size.height as i32;
+                            // macOS: if the window would go above the menu bar,
+                            // place it below the tray icon instead.
+                            if y < 0 {
+                                y = tray_y + tray_h;
+                            }
+                            let _ = window.set_position(tauri::Position::Physical(
+                                tauri::PhysicalPosition::new(x, y),
+                            ));
+                        }
                         let _ = window.show();
                         let _ = window.set_focus();
                     }
