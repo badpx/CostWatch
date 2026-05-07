@@ -49,6 +49,12 @@ pnpm build
 ```bash
 cargo test --manifest-path src-tauri/Cargo.toml
 ```
+### macOS Note
+The app is not codesigned. After downloading, remove the quarantine flag before opening:
+
+```bash
+xattr -cr /Applications/CostWatch.app
+```
 
 ## Architecture
 
