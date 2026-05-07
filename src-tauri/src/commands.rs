@@ -151,25 +151,49 @@ pub async fn refresh_provider(
 
     let is_builtin = !provider_id.starts_with("plugin-");
     let mut result = fetcher::fetch_provider(&config, &provider_id, &token, is_builtin).await;
-    result.has_token = true;
 
-    if result.status == ProviderStatus::Ok {
-        if let Some(value) = crate::provider::history::get_primary_value(
-            &result.balance,
-            &result.available,
-        ) {
-            let _ = crate::provider::history::record_history(&provider_id, value);
+    // Re-check token still exists (may have been deleted during the fetch)
+    let token_still_exists = crate::storage::get_token(&provider_id)
+        .unwrap_or(None)
+        .is_some();
+
+    if token_still_exists {
+        result.has_token = true;
+
+        if result.status == ProviderStatus::Ok {
+            if let Some(value) = crate::provider::history::get_primary_value(
+                &result.balance,
+                &result.available,
+            ) {
+                let _ = crate::provider::history::record_history(&provider_id, value);
+            }
         }
-    }
 
-    let mut providers = state.providers.lock().unwrap();
-    if let Some(pos) = providers.iter().position(|p| p.id == provider_id) {
-        providers[pos] = result.clone();
-    }
-    drop(providers);
+        let mut providers = state.providers.lock().unwrap();
+        if let Some(pos) = providers.iter().position(|p| p.id == provider_id) {
+            providers[pos] = result.clone();
+        }
+        drop(providers);
 
-    let _ = app.emit("providers-updated", ());
-    Ok(result)
+        let _ = app.emit("providers-updated", ());
+        Ok(result)
+    } else {
+        let mut providers = state.providers.lock().unwrap();
+        if let Some(pos) = providers.iter().position(|p| p.id == provider_id) {
+            providers[pos].has_token = false;
+            providers[pos].status = ProviderStatus::Unconfigured;
+            providers[pos].balance = None;
+            providers[pos].used = None;
+            providers[pos].available = None;
+            providers[pos].display_label = None;
+            providers[pos].last_updated = None;
+            providers[pos].error_message = None;
+        }
+        drop(providers);
+
+        let _ = app.emit("providers-updated", ());
+        Err(String::from("Token was deleted during refresh"))
+    }
 }
 
 pub async fn refresh_all_internal(state: &AppState) -> Result<(), String> {
@@ -186,18 +210,51 @@ pub async fn refresh_all_internal(state: &AppState) -> Result<(), String> {
             let is_builtin = !id.starts_with("plugin-");
             let mut result =
                 fetcher::fetch_provider(config, id, &token_entry.token, is_builtin).await;
-            result.has_token = true;
 
-            if result.status == ProviderStatus::Ok {
-                if let Some(value) = crate::provider::history::get_primary_value(
-                    &result.balance,
-                    &result.available,
-                ) {
-                    let _ = crate::provider::history::record_history(id, value);
+            // Re-check token still exists (may have been deleted during the fetch)
+            let token_still_exists = crate::storage::get_token(id)
+                .unwrap_or(None)
+                .is_some();
+
+            if token_still_exists {
+                result.has_token = true;
+
+                if result.status == ProviderStatus::Ok {
+                    if let Some(value) = crate::provider::history::get_primary_value(
+                        &result.balance,
+                        &result.available,
+                    ) {
+                        let _ = crate::provider::history::record_history(id, value);
+                    }
                 }
-            }
 
-            updated_providers.push(result);
+                updated_providers.push(result);
+            } else {
+                // Token was deleted during fetch — discard result
+                let unconfigured = ProviderState {
+                    id: id.clone(),
+                    name: config.name.clone(),
+                    icon: if is_builtin {
+                        ProviderIcon::Builtin(config.icon.clone())
+                    } else {
+                        ProviderIcon::Custom(config.icon.clone())
+                    },
+                    is_builtin,
+                    balance: None,
+                    used: None,
+                    available: None,
+                    currency: Currency::default(),
+                    is_available: None,
+                    extra_fields: Default::default(),
+                    display_label: None,
+                    has_token: false,
+                    has_progress: config.display.progress.is_some(),
+                    status: ProviderStatus::Unconfigured,
+                    last_updated: None,
+                    error_message: None,
+                };
+                updated_providers.push(unconfigured);
+            }
         } else {
             let is_builtin = !id.starts_with("plugin-");
             let unconfigured = ProviderState {
@@ -223,6 +280,21 @@ pub async fn refresh_all_internal(state: &AppState) -> Result<(), String> {
                 error_message: None,
             };
             updated_providers.push(unconfigured);
+        }
+    }
+
+    // Re-check tokens before applying — some may have been deleted during the async fetches
+    let current_tokens = crate::storage::load_tokens().unwrap_or_default();
+    for provider in &mut updated_providers {
+        if provider.has_token && !current_tokens.providers.contains_key(&provider.id) {
+            provider.has_token = false;
+            provider.status = ProviderStatus::Unconfigured;
+            provider.balance = None;
+            provider.used = None;
+            provider.available = None;
+            provider.display_label = None;
+            provider.last_updated = None;
+            provider.error_message = None;
         }
     }
 

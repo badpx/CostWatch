@@ -4,6 +4,9 @@ use serde_json;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Mutex;
+
+static TOKEN_FILE_LOCK: Mutex<()> = Mutex::new(());
 
 pub fn app_data_dir() -> PathBuf {
     dirs::home_dir()
@@ -52,7 +55,7 @@ pub struct TokenStore {
     pub providers: HashMap<String, ProviderToken>,
 }
 
-pub fn load_tokens() -> Result<TokenStore, String> {
+fn load_tokens_inner() -> Result<TokenStore, String> {
     let path = app_data_dir().join("tokens.json");
     if !path.exists() {
         return Ok(TokenStore::default());
@@ -62,7 +65,7 @@ pub fn load_tokens() -> Result<TokenStore, String> {
     serde_json::from_str(&content).map_err(|e| format!("Cannot parse tokens: {}", e))
 }
 
-pub fn save_tokens(store: &TokenStore) -> Result<(), String> {
+fn save_tokens_inner(store: &TokenStore) -> Result<(), String> {
     ensure_dirs()?;
     let content = serde_json::to_string_pretty(store)
         .map_err(|e| format!("Cannot serialize tokens: {}", e))?;
@@ -70,13 +73,25 @@ pub fn save_tokens(store: &TokenStore) -> Result<(), String> {
     fs::write(path, content).map_err(|e| format!("Cannot write tokens: {}", e))
 }
 
+pub fn load_tokens() -> Result<TokenStore, String> {
+    let _guard = TOKEN_FILE_LOCK.lock().unwrap();
+    load_tokens_inner()
+}
+
+pub fn save_tokens(store: &TokenStore) -> Result<(), String> {
+    let _guard = TOKEN_FILE_LOCK.lock().unwrap();
+    save_tokens_inner(store)
+}
+
 pub fn get_token(provider_id: &str) -> Result<Option<String>, String> {
-    let store = load_tokens()?;
+    let _guard = TOKEN_FILE_LOCK.lock().unwrap();
+    let store = load_tokens_inner()?;
     Ok(store.providers.get(provider_id).map(|t| t.token.clone()))
 }
 
 pub fn save_token(provider_id: &str, token: &str) -> Result<(), String> {
-    let mut store = load_tokens()?;
+    let _guard = TOKEN_FILE_LOCK.lock().unwrap();
+    let mut store = load_tokens_inner()?;
     store.providers.insert(
         provider_id.to_string(),
         ProviderToken {
@@ -84,11 +99,12 @@ pub fn save_token(provider_id: &str, token: &str) -> Result<(), String> {
             enabled: true,
         },
     );
-    save_tokens(&store)
+    save_tokens_inner(&store)
 }
 
 pub fn delete_token(provider_id: &str) -> Result<(), String> {
-    let mut store = load_tokens()?;
+    let _guard = TOKEN_FILE_LOCK.lock().unwrap();
+    let mut store = load_tokens_inner()?;
     store.providers.remove(provider_id);
-    save_tokens(&store)
+    save_tokens_inner(&store)
 }
