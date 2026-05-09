@@ -1,3 +1,4 @@
+use rusqlite::OptionalExtension;
 use rust_decimal::prelude::ToPrimitive;
 use serde::Serialize;
 
@@ -71,28 +72,43 @@ pub fn record_history(provider_id: &str, value: f64) -> Result<(), String> {
         .join(".costwatch")
         .join("history.db");
 
-    let conn = rusqlite::Connection::open(&db_path)
+    let mut conn = rusqlite::Connection::open(&db_path)
         .map_err(|e| format!("DB open error: {}", e))?;
 
-    // Skip if a record was inserted for this provider within the last 30 seconds
-    // to avoid duplicates from concurrent fetch paths (e.g. refresh_all + test_connection).
-    let recent: i64 = conn
+    let tx = conn
+        .transaction()
+        .map_err(|e| format!("transaction error: {}", e))?;
+
+    let recent: Option<(i64, f64)> = tx
         .query_row(
-            "SELECT COUNT(*) FROM provider_history WHERE provider_id = ?1 AND recorded_at >= datetime('now', '-30 seconds')",
+            "SELECT id, value FROM provider_history
+             WHERE provider_id = ?1
+             ORDER BY recorded_at DESC LIMIT 1",
             rusqlite::params![provider_id],
-            |row| row.get(0),
+            |row| Ok((row.get(0)?, row.get(1)?)),
         )
-        .unwrap_or(0);
-    if recent > 0 {
-        return Ok(());
+        .optional()
+        .map_err(|e| format!("query recent error: {}", e))?;
+
+    if let Some((id, last_value)) = recent {
+        if (last_value - value).abs() < f64::EPSILON {
+            tx.execute(
+                "UPDATE provider_history SET recorded_at = datetime('now') WHERE id = ?1",
+                rusqlite::params![id],
+            )
+            .map_err(|e| format!("update error: {}", e))?;
+            tx.commit().map_err(|e| format!("commit error: {}", e))?;
+            return Ok(());
+        }
     }
 
-    conn.execute(
+    tx.execute(
         "INSERT INTO provider_history (provider_id, recorded_at, value) VALUES (?1, datetime('now'), ?2)",
         rusqlite::params![provider_id, value],
     )
     .map_err(|e| format!("insert error: {}", e))?;
 
+    tx.commit().map_err(|e| format!("commit error: {}", e))?;
     Ok(())
 }
 
