@@ -92,13 +92,23 @@ pub fn record_history(provider_id: &str, value: f64) -> Result<(), String> {
 
     if let Some((id, last_value)) = recent {
         if (last_value - value).abs() < f64::EPSILON {
-            tx.execute(
-                "UPDATE provider_history SET recorded_at = datetime('now') WHERE id = ?1",
-                rusqlite::params![id],
-            )
-            .map_err(|e| format!("update error: {}", e))?;
-            tx.commit().map_err(|e| format!("commit error: {}", e))?;
-            return Ok(());
+            let count: i64 = tx
+                .query_row(
+                    "SELECT COUNT(*) FROM provider_history WHERE provider_id = ?1",
+                    rusqlite::params![provider_id],
+                    |row| row.get(0),
+                )
+                .map_err(|e| format!("count error: {}", e))?;
+
+            if count >= 2 {
+                tx.execute(
+                    "UPDATE provider_history SET recorded_at = datetime('now') WHERE id = ?1",
+                    rusqlite::params![id],
+                )
+                .map_err(|e| format!("update error: {}", e))?;
+                tx.commit().map_err(|e| format!("commit error: {}", e))?;
+                return Ok(());
+            }
         }
     }
 
