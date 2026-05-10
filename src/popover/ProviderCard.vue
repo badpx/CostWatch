@@ -1,5 +1,5 @@
 <template>
-  <div class="provider-card" :class="{ error: isError, unconfigured: isUnconfigured }">
+  <div class="provider-card" :class="{ error: isError, unconfigured: isUnconfigured }" @click="handleCardClick">
     <div class="provider-header">
       <span class="provider-name">
         <span v-if="iconKey" class="provider-icon-wrap">
@@ -41,12 +41,12 @@
 
     <template v-else-if="isUnconfigured">
       <div class="provider-message">{{ $t('provider.unconfiguredToken') }}</div>
-      <button class="btn-small" @click="$emit('openSettings')">{{ $t('provider.configure') }}</button>
+      <button class="btn-small" @click="emit('openSettings', { id: provider.id, name: provider.name, isBuiltin: provider.is_builtin })">{{ $t('provider.configure') }}</button>
     </template>
 
     <template v-else-if="isError">
       <div class="provider-message error">{{ errorMessage }}</div>
-      <button class="btn-small" @click="$emit('retry', provider.id)">{{ $t('provider.retry') }}</button>
+      <button class="btn-small" @click.stop="emit('retry', provider.id)">{{ $t('provider.retry') }}</button>
     </template>
   </div>
 </template>
@@ -63,8 +63,8 @@ const props = defineProps<{
   provider: ProviderState;
 }>();
 
-defineEmits<{
-  openSettings: [];
+const emit = defineEmits<{
+  openSettings: [payload: { id: string; name: string; isBuiltin: boolean }];
   retry: [id: string];
 }>();
 
@@ -152,6 +152,11 @@ function getCurrencySymbol(currency: ProviderState["currency"]): string {
   }
   if (typeof currency === "object" && "Custom" in currency) return currency.Custom;
   return "";
+}
+
+function handleCardClick(e: MouseEvent) {
+  if ((e.target as HTMLElement).closest("button")) return;
+  emit("openSettings", { id: props.provider.id, name: props.provider.name, isBuiltin: props.provider.is_builtin });
 }
 </script>
 

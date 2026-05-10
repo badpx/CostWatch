@@ -6,6 +6,7 @@
       v-for="provider in pluginProviders"
       :key="provider.id"
       class="provider-item"
+      :id="`provider-${provider.id}`"
     >
       <div class="provider-info">
         <span class="provider-name">
@@ -120,7 +121,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, nextTick, inject, onMounted, onUnmounted } from "vue";
+import type { Ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import { open, ask } from "@tauri-apps/plugin-dialog";
@@ -156,9 +158,16 @@ const providers = ref<ProviderState[]>([]);
 const tokenInputs = ref<Record<string, string>>({});
 const showToken = ref<Record<string, boolean>>({});
 const historyData = ref<Record<string, HistoryPoint[]>>({});
-const trendExpanded = ref<Record<string, boolean>>({});
 const showGuide = ref(false);
 const copied = ref(false);
+const trendExpanded = ref<Record<string, boolean>>({});
+
+const navigateProviderId = inject<Ref<string | null>>("navigateProviderId")!;
+watch(navigateProviderId, async (id) => {
+  if (!id) return;
+  await nextTick();
+  document.getElementById(`provider-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+}, { immediate: true });
 
 const trendRange = computed(() => globalSettings.value.trend_range || "24h");
 

@@ -30,7 +30,7 @@
 
         <div v-if="configuredProviders.length === 0" class="empty-state">
           <p>{{ $t('popover.noProvider') }}</p>
-          <button class="btn-primary" @click="openSettings">
+          <button class="btn-primary" @click="() => openSettings()">
             {{ $t('popover.openSettings') }}
           </button>
         </div>
@@ -41,7 +41,7 @@
       <span class="auto-refresh">
         {{ $t('popover.autoRefresh', { secs: settings.refresh_interval_secs }) }}
       </span>
-      <button class="settings-btn" @click="openSettings">⚙</button>
+      <button class="settings-btn" @click="() => openSettings()">⚙</button>
     </div>
   </div>
 </template>
@@ -73,8 +73,9 @@ const configuredProviders = computed(() =>
   providers.value.filter((p) => p.has_token)
 );
 
-async function openSettings() {
-  await emit("navigate-to-tab", { tab: "providers" });
+async function openSettings(payload?: { id: string; name: string; isBuiltin: boolean }) {
+  const tab = payload?.isBuiltin ? "providers" : (payload ? "plugins" : "providers");
+  await emit("navigate-to-tab", { tab, providerId: payload?.id ?? null });
   await invoke("show_settings_window");
 }
 

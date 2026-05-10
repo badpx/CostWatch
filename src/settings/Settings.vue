@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, provide } from "vue";
 import { useI18n } from "vue-i18n";
 import ProviderConfig from "./ProviderConfig.vue";
 import PluginManager from "./PluginManager.vue";
@@ -29,6 +29,8 @@ import { listen } from "@tauri-apps/api/event";
 const { t } = useI18n();
 
 const activeTab = ref("providers");
+const navigateProviderId = ref<string | null>(null);
+provide("navigateProviderId", navigateProviderId);
 
 const tabs = [
   { id: "providers", label: computed(() => t("settings.tabs.providers")) },
@@ -39,10 +41,11 @@ const tabs = [
 let unlisten: (() => void) | null = null;
 
 onMounted(() => {
-  listen<{ tab: string }>("navigate-to-tab", (event) => {
+  listen<{ tab: string; providerId?: string | null }>("navigate-to-tab", (event) => {
     if (tabs.some((t) => t.id === event.payload.tab)) {
       activeTab.value = event.payload.tab;
     }
+    navigateProviderId.value = event.payload.providerId ?? null;
   }).then((fn) => {
     unlisten = fn;
   });
