@@ -120,11 +120,25 @@ const historyData = ref<Record<string, HistoryPoint[]>>({});
 const trendExpanded = ref<Record<string, boolean>>({});
 
 const navigateProviderId = inject<Ref<string | null>>("navigateProviderId")!;
-watch(navigateProviderId, async (id) => {
-  if (!id) return;
-  await nextTick();
-  document.getElementById(`provider-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-}, { immediate: true });
+
+function scrollToProvider(id: string) {
+  const el = document.getElementById(`provider-${id}`);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
+onMounted(() => {
+  if (navigateProviderId.value) {
+    nextTick(() => scrollToProvider(navigateProviderId.value!));
+  }
+});
+
+watch(navigateProviderId, (id) => {
+  if (id) {
+    nextTick(() => scrollToProvider(id));
+  }
+});
 
 const trendRange = computed(() => globalSettings.value.trend_range || "24h");
 
