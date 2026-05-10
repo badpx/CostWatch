@@ -169,21 +169,26 @@ const trendExpanded = ref<Record<string, boolean>>({});
 const navigateProviderId = inject<Ref<string | null>>("navigateProviderId")!;
 
 function scrollToProvider(id: string) {
-  const el = document.getElementById(`provider-${id}`);
-  if (el) {
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
+  trendExpanded.value[id] = true;
+  nextTick(() => {
+    setTimeout(() => {
+      const el = document.getElementById(`provider-${id}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 350);
+  });
 }
 
 onMounted(() => {
   if (navigateProviderId.value) {
-    nextTick(() => scrollToProvider(navigateProviderId.value!));
+    scrollToProvider(navigateProviderId.value);
   }
 });
 
 watch(navigateProviderId, (id) => {
   if (id) {
-    nextTick(() => scrollToProvider(id));
+    scrollToProvider(id);
   }
 });
 
