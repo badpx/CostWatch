@@ -5,7 +5,9 @@
       v-for="provider in builtinProviders"
       :key="provider.id"
       class="provider-item"
+      :class="{ clickable: provider.has_token }"
       :id="`provider-${provider.id}`"
+      @click="handleItemClick(provider)"
     >
       <div class="provider-info">
         <span class="provider-name">
@@ -30,15 +32,10 @@
             <span class="balance-value">{{ cachedBalanceText(provider) }}</span>
           </div>
           <div class="provider-actions-right">
-            <button class="btn-icon" :title="$t('providerConfig.toggleTrend')" @click="toggleTrend(provider.id)">
-              <svg class="trend-chevron" :class="{ expanded: trendExpanded[provider.id] }" width="14" height="14" viewBox="0 0 16 16" fill="none">
-                <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-            <button class="btn-test" @click="testConnection(provider.id)">
+            <button class="btn-test" @click.stop="testConnection(provider.id)">
               {{ $t('providerConfig.test') }}
             </button>
-            <button class="btn-warning" @click="deleteToken(provider.id)">
+            <button class="btn-warning" @click.stop="deleteToken(provider.id)">
               {{ $t('providerConfig.deleteToken') }}
             </button>
           </div>
@@ -73,6 +70,13 @@
         <div class="trend-section">
           <TrendChart :dataPoints="historyData[provider.id] || []" :range="trendRange" :currency="provider.currency" />
         </div>
+      </div>
+      <div
+        v-if="provider.has_token"
+        class="trend-indicator"
+        :class="{ expanded: trendExpanded[provider.id] }"
+      >
+        <span class="trend-arrow"></span>
       </div>
     </div>
   </div>
@@ -224,6 +228,11 @@ function toggleTrend(id: string) {
   trendExpanded.value[id] = !trendExpanded.value[id];
 }
 
+function handleItemClick(provider: ProviderState) {
+  if (!provider.has_token) return;
+  toggleTrend(provider.id);
+}
+
 function stripSpaces(id: string) {
   const val = tokenInputs.value[id];
   if (val) {
@@ -326,6 +335,12 @@ onUnmounted(() => {
   padding: 12px;
   margin-bottom: 8px;
 }
+.provider-item.clickable {
+  cursor: pointer;
+}
+.provider-item.clickable:hover {
+  background: var(--bg-surface-hover);
+}
 .provider-info {
   display: flex;
   justify-content: space-between;
@@ -357,25 +372,25 @@ onUnmounted(() => {
   overflow: hidden;
   min-height: 0;
 }
-.btn-icon {
-  display: inline-flex;
-  align-items: center;
+.trend-indicator {
+  display: flex;
   justify-content: center;
-  padding: 4px;
-  background: none;
-  border: 1px solid var(--border-hover);
-  border-radius: 4px;
-  cursor: pointer;
-  color: var(--text-secondary);
+  padding: 4px 0 0 0;
+  opacity: 0.35;
+  transition: opacity 0.15s;
 }
-.btn-icon:hover {
-  background: var(--bg-surface-hover);
-  color: var(--text-primary);
+.provider-item.clickable:hover .trend-indicator {
+  opacity: 0.65;
 }
-.trend-chevron {
+.trend-arrow {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--text-muted);
   transition: transform 0.25s ease;
 }
-.trend-chevron.expanded {
+.trend-indicator.expanded .trend-arrow {
   transform: rotate(180deg);
 }
 .provider-badge {
