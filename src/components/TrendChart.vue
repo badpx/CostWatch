@@ -148,7 +148,7 @@ function draw() {
     ctx.save();
     ctx.setLineDash([3, 3]);
     ctx.strokeStyle = "#4a9";
-    ctx.lineWidth = 1.8;
+    ctx.lineWidth = 1.0;
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
     ctx.stroke(new Path2D(dashedPath));
