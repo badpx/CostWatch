@@ -155,14 +155,34 @@ pub fn run() {
                 let _ = crate::commands::refresh_all_internal(&state).await;
                 let _ = app_handle.emit("providers-updated", ());
 
-                // Periodic refresh loop — runs independently of any frontend window
+                // Periodic refresh loop — runs independently of any frontend window.
+                // We slice the long sleep into 10-second chunks and re-read the interval
+                // after each slice so that a user change to the refresh interval is picked
+                // up within ~10 s instead of having to wait for the previous (possibly
+                // much longer) sleep to finish.
                 loop {
-                    let interval_secs = {
+                    let target = {
                         let state = app_handle.state::<AppState>();
                         let secs = state.settings.lock().unwrap().refresh_interval_secs;
                         secs
                     };
-                    tokio::time::sleep(std::time::Duration::from_secs(interval_secs)).await;
+                    let mut elapsed = 0u64;
+                    while elapsed < target {
+                        let step = std::cmp::min(10, target.saturating_sub(elapsed));
+                        tokio::time::sleep(std::time::Duration::from_secs(step)).await;
+                        elapsed += step;
+
+                        // Re-read interval in case user changed it mid-sleep
+                        let current = {
+                            let state = app_handle.state::<AppState>();
+                            let secs = state.settings.lock().unwrap().refresh_interval_secs;
+                            secs
+                        };
+                        if current != target {
+                            // Interval changed: restart the countdown with the new target
+                            break;
+                        }
+                    }
 
                     let state = app_handle.state::<AppState>();
                     let _ = crate::commands::refresh_all_internal(&state).await;
