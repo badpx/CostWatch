@@ -67,4 +67,5 @@ export interface GeneralSettings {
 export interface HistoryPoint {
   recorded_at: string;
   value: number;
+  interpolated?: boolean;
 }

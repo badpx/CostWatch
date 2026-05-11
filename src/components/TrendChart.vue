@@ -102,6 +102,10 @@ function draw() {
   ctx.fillText(formatVal(maxVal, props.currency), 2, toY(maxVal) - 3);
   ctx.fillText(formatVal(minVal, props.currency), 2, toY(minVal) - 3);
 
+  // Find the boundary between interpolated and real points.
+  const firstRealIdx = points.findIndex((p) => !p.interpolated);
+  const hasInterpolated = firstRealIdx > 0;
+
   if (points.length === 1) {
     const x = toX(0);
     const y = toY(values[0]);
@@ -112,16 +116,14 @@ function draw() {
     return;
   }
 
-  let linePath = "";
+  // Build area path (all points participate in fill).
   let areaPath = "";
   for (let i = 0; i < points.length; i++) {
     const x = toX(i);
     const y = toY(values[i]);
     if (i === 0) {
-      linePath += `M${x},${y}`;
       areaPath += `M${x},${y}`;
     } else {
-      linePath += ` L${x},${y}`;
       areaPath += ` L${x},${y}`;
     }
   }
@@ -136,11 +138,53 @@ function draw() {
   ctx.fillStyle = gradient;
   ctx.fill(new Path2D(areaPath));
 
-  ctx.strokeStyle = "#4a9";
-  ctx.lineWidth = 1.8;
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
-  ctx.stroke(new Path2D(linePath));
+  // Build line path and split into dashed (interpolated) and solid (real) segments.
+  if (hasInterpolated) {
+    // Dashed segment: interpolated point(s) up to the first real point.
+    let dashedPath = `M${toX(0)},${toY(values[0])}`;
+    for (let i = 1; i <= firstRealIdx; i++) {
+      dashedPath += ` L${toX(i)},${toY(values[i])}`;
+    }
+    ctx.save();
+    ctx.setLineDash([3, 3]);
+    ctx.strokeStyle = "#4a9";
+    ctx.lineWidth = 1.8;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.stroke(new Path2D(dashedPath));
+    ctx.restore();
+
+    // Solid segment: first real point onward.
+    if (firstRealIdx < points.length - 1) {
+      let solidPath = `M${toX(firstRealIdx)},${toY(values[firstRealIdx])}`;
+      for (let i = firstRealIdx + 1; i < points.length; i++) {
+        solidPath += ` L${toX(i)},${toY(values[i])}`;
+      }
+      ctx.strokeStyle = "#4a9";
+      ctx.lineWidth = 1.8;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.setLineDash([]);
+      ctx.stroke(new Path2D(solidPath));
+    }
+  } else {
+    let linePath = "";
+    for (let i = 0; i < points.length; i++) {
+      const x = toX(i);
+      const y = toY(values[i]);
+      if (i === 0) {
+        linePath += `M${x},${y}`;
+      } else {
+        linePath += ` L${x},${y}`;
+      }
+    }
+    ctx.strokeStyle = "#4a9";
+    ctx.lineWidth = 1.8;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.setLineDash([]);
+    ctx.stroke(new Path2D(linePath));
+  }
 }
 
 

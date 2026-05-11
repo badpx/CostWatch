@@ -2,10 +2,16 @@ use rusqlite::OptionalExtension;
 use rust_decimal::prelude::ToPrimitive;
 use serde::Serialize;
 
+fn is_false(b: &bool) -> bool {
+    !*b
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct HistoryPoint {
     pub recorded_at: String,
     pub value: f64,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub interpolated: bool,
 }
 
 /// Extract the primary numeric value from a ProviderState for history recording.
@@ -30,6 +36,40 @@ fn range_to_days(range: &str) -> &str {
     }
 }
 
+fn parse_iso_to_millis(s: &str) -> Result<i64, String> {
+    let dt = chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")
+        .map_err(|e| format!("parse datetime error: {}", e))?;
+    Ok(dt.and_utc().timestamp_millis())
+}
+
+fn make_interpolated_point(
+    range_start_iso: &str,
+    prev: &HistoryPoint,
+    first_in_range: Option<&HistoryPoint>,
+) -> Result<HistoryPoint, String> {
+    let t_min = parse_iso_to_millis(range_start_iso)?;
+    let t_prev = parse_iso_to_millis(&prev.recorded_at)?;
+
+    let v_interp = if let Some(first) = first_in_range {
+        let t_first = parse_iso_to_millis(&first.recorded_at)?;
+        let ratio = if t_first == t_prev {
+            0.0
+        } else {
+            (t_min as f64 - t_prev as f64) / (t_first as f64 - t_prev as f64)
+        };
+        prev.value + (first.value - prev.value) * ratio
+    } else {
+        // No point in range: horizontal line from previous value.
+        prev.value
+    };
+
+    Ok(HistoryPoint {
+        recorded_at: range_start_iso.to_string(),
+        value: v_interp,
+        interpolated: true,
+    })
+}
+
 pub fn query_history(provider_id: &str, range: &str) -> Result<Vec<HistoryPoint>, String> {
     let db_path = dirs::home_dir()
         .ok_or_else(|| "home dir not found".to_string())?
@@ -40,6 +80,8 @@ pub fn query_history(provider_id: &str, range: &str) -> Result<Vec<HistoryPoint>
         .map_err(|e| format!("DB open error: {}", e))?;
 
     let days = range_to_days(range);
+
+    // 1. Query points within the range.
     let sql = format!(
         "SELECT recorded_at, value FROM provider_history
          WHERE provider_id = ?1 AND recorded_at >= datetime('now', '{}')
@@ -55,7 +97,11 @@ pub fn query_history(provider_id: &str, range: &str) -> Result<Vec<HistoryPoint>
         .query_map([provider_id], |row| {
             let recorded_at: String = row.get(0)?;
             let value: f64 = row.get(1)?;
-            Ok(HistoryPoint { recorded_at, value })
+            Ok(HistoryPoint {
+                recorded_at,
+                value,
+                interpolated: false,
+            })
         })
         .map_err(|e| format!("query error: {}", e))?;
 
@@ -63,6 +109,41 @@ pub fn query_history(provider_id: &str, range: &str) -> Result<Vec<HistoryPoint>
     for row in rows {
         points.push(row.map_err(|e| format!("row error: {}", e))?);
     }
+
+    // 2. If <= 1 real point in range, try to interpolate from predecessor.
+    if points.len() <= 1 {
+        let range_start_iso: String = conn
+            .query_row(
+                &format!("SELECT datetime('now', '{}')", days),
+                [],
+                |row| row.get(0),
+            )
+            .map_err(|e| format!("range_start query error: {}", e))?;
+
+        let prev_sql = format!(
+            "SELECT recorded_at, value FROM provider_history
+             WHERE provider_id = ?1 AND recorded_at < datetime('now', '{}')
+             ORDER BY recorded_at DESC LIMIT 1",
+            days
+        );
+
+        if let Ok(prev) = conn.query_row(&prev_sql, [provider_id], |row| {
+            let recorded_at: String = row.get(0)?;
+            let value: f64 = row.get(1)?;
+            Ok(HistoryPoint {
+                recorded_at,
+                value,
+                interpolated: false,
+            })
+        }) {
+            let interpolated =
+                make_interpolated_point(&range_start_iso, &prev, points.first())?;
+            let mut result = vec![interpolated];
+            result.extend(points);
+            return Ok(result);
+        }
+    }
+
     Ok(points)
 }
 
@@ -155,5 +236,86 @@ mod tests {
         let balance: Option<Decimal> = None;
         let available: Option<Decimal> = None;
         assert_eq!(get_primary_value(&balance, &available), None);
+    }
+
+    #[test]
+    fn test_parse_iso_to_millis() {
+        let ms = parse_iso_to_millis("2026-05-11 12:00:00").unwrap();
+        let expected = chrono::NaiveDate::from_ymd_opt(2026, 5, 11)
+            .unwrap()
+            .and_hms_opt(12, 0, 0)
+            .unwrap()
+            .and_utc()
+            .timestamp_millis();
+        assert_eq!(ms, expected);
+    }
+
+    #[test]
+    fn test_interpolate_between_two_points() {
+        let prev = HistoryPoint {
+            recorded_at: "2026-05-10 00:00:00".to_string(),
+            value: 100.0,
+            interpolated: false,
+        };
+        let first = HistoryPoint {
+            recorded_at: "2026-05-11 12:00:00".to_string(),
+            value: 90.0,
+            interpolated: false,
+        };
+        let result = make_interpolated_point("2026-05-11 00:00:00", &prev, Some(&first)).unwrap();
+        assert!(result.interpolated);
+        // Exactly halfway in time -> halfway in value.
+        assert!((result.value - 93.333333).abs() < 0.001, "got {}", result.value);
+    }
+
+    #[test]
+    fn test_interpolate_horizontal_when_no_in_range_point() {
+        let prev = HistoryPoint {
+            recorded_at: "2026-05-10 00:00:00".to_string(),
+            value: 88.5,
+            interpolated: false,
+        };
+        let result = make_interpolated_point("2026-05-11 00:00:00", &prev, None).unwrap();
+        assert!(result.interpolated);
+        assert_eq!(result.value, 88.5);
+    }
+
+    #[test]
+    fn test_interpolate_zero_ratio_at_prev() {
+        let prev = HistoryPoint {
+            recorded_at: "2026-05-11 00:00:00".to_string(),
+            value: 50.0,
+            interpolated: false,
+        };
+        let first = HistoryPoint {
+            recorded_at: "2026-05-11 12:00:00".to_string(),
+            value: 60.0,
+            interpolated: false,
+        };
+        let result = make_interpolated_point("2026-05-11 00:00:00", &prev, Some(&first)).unwrap();
+        assert!(result.interpolated);
+        assert!((result.value - 50.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_history_point_serde_omits_interpolated_when_false() {
+        let real = HistoryPoint {
+            recorded_at: "2026-05-11 00:00:00".to_string(),
+            value: 42.0,
+            interpolated: false,
+        };
+        let json = serde_json::to_string(&real).unwrap();
+        assert!(!json.contains("interpolated"), "json: {}", json);
+    }
+
+    #[test]
+    fn test_history_point_serde_includes_interpolated_when_true() {
+        let interp = HistoryPoint {
+            recorded_at: "2026-05-11 00:00:00".to_string(),
+            value: 42.0,
+            interpolated: true,
+        };
+        let json = serde_json::to_string(&interp).unwrap();
+        assert!(json.contains("\"interpolated\":true"), "json: {}", json);
     }
 }
