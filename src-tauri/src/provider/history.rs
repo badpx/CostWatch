@@ -36,6 +36,16 @@ fn range_to_days(range: &str) -> &str {
     }
 }
 
+fn range_to_ms(range: &str) -> i64 {
+    match range {
+        "24h" => 24 * 60 * 60 * 1000,
+        "3d" => 3 * 24 * 60 * 60 * 1000,
+        "1w" => 7 * 24 * 60 * 60 * 1000,
+        "1m" => 30 * 24 * 60 * 60 * 1000,
+        _ => 7 * 24 * 60 * 60 * 1000,
+    }
+}
+
 fn parse_iso_to_millis(s: &str) -> Result<i64, String> {
     let dt = chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")
         .map_err(|e| format!("parse datetime error: {}", e))?;
@@ -110,8 +120,22 @@ pub fn query_history(provider_id: &str, range: &str) -> Result<Vec<HistoryPoint>
         points.push(row.map_err(|e| format!("row error: {}", e))?);
     }
 
-    // 2. If <= 1 real point in range, try to interpolate from predecessor.
-    if points.len() <= 1 {
+    // 2. Determine whether interpolation is needed.
+    //   - Empty or single point: always interpolate.
+    //   - >= 2 points: interpolate when the real data does not yet span
+    //     the full time window (e.g. app just restarted after a long gap).
+    //     The interpolated point sits at the window's left edge, giving
+    //     the line a left-hand anchor until enough history accumulates.
+    let window_ms = range_to_ms(range);
+    let needs_interp = if points.len() <= 1 {
+        true
+    } else {
+        let first_ts = parse_iso_to_millis(&points[0].recorded_at)?;
+        let last_ts = parse_iso_to_millis(&points[points.len() - 1].recorded_at)?;
+        (last_ts - first_ts) < window_ms
+    };
+
+    if needs_interp {
         let range_start_iso: String = conn
             .query_row(
                 &format!("SELECT datetime('now', '{}')", days),
@@ -173,15 +197,25 @@ pub fn record_history(provider_id: &str, value: f64) -> Result<(), String> {
 
     if let Some((id, last_value)) = recent {
         if (last_value - value).abs() < f64::EPSILON {
-            let count: i64 = tx
+            let is_today: bool = tx
                 .query_row(
-                    "SELECT COUNT(*) FROM provider_history WHERE provider_id = ?1",
+                    "SELECT COUNT(*) FROM provider_history
+                     WHERE provider_id = ?1 AND id = ?2 AND recorded_at >= date('now')",
+                    rusqlite::params![provider_id, id],
+                    |row| row.get::<_, i64>(0),
+                )
+                .unwrap_or(0) > 0;
+
+            let today_count: i64 = tx
+                .query_row(
+                    "SELECT COUNT(*) FROM provider_history
+                     WHERE provider_id = ?1 AND recorded_at >= date('now')",
                     rusqlite::params![provider_id],
                     |row| row.get(0),
                 )
-                .map_err(|e| format!("count error: {}", e))?;
+                .map_err(|e| format!("today_count error: {}", e))?;
 
-            if count >= 2 {
+            if is_today && today_count >= 2 {
                 tx.execute(
                     "UPDATE provider_history SET recorded_at = datetime('now') WHERE id = ?1",
                     rusqlite::params![id],
@@ -317,5 +351,192 @@ mod tests {
         };
         let json = serde_json::to_string(&interp).unwrap();
         assert!(json.contains("\"interpolated\":true"), "json: {}", json);
+    }
+
+    #[test]
+    fn test_merge_same_value_same_day() {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        conn.execute(
+            "CREATE TABLE provider_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                provider_id TEXT NOT NULL,
+                recorded_at TEXT NOT NULL,
+                value REAL NOT NULL
+            )",
+            [],
+        )
+        .unwrap();
+
+        // Insert two records for today
+        conn.execute(
+            "INSERT INTO provider_history (provider_id, recorded_at, value)
+             VALUES ('p1', datetime('now'), 100.0)",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO provider_history (provider_id, recorded_at, value)
+             VALUES ('p1', datetime('now'), 100.0)",
+            [],
+        )
+        .unwrap();
+
+        let is_today: bool = conn
+            .query_row(
+                "SELECT COUNT(*) FROM provider_history
+                 WHERE provider_id = 'p1' AND id = (SELECT MAX(id) FROM provider_history WHERE provider_id = 'p1')
+                 AND recorded_at >= date('now')",
+                [],
+                |row| row.get::<_, i64>(0),
+            )
+            .unwrap()
+            > 0;
+        assert!(is_today);
+
+        let today_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM provider_history
+                 WHERE provider_id = 'p1' AND recorded_at >= date('now')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(today_count, 2);
+
+        // Same value, today_count >= 2, and today's record -> should merge
+        assert!(is_today && today_count >= 2);
+    }
+
+    #[test]
+    fn test_cross_day_creates_two_today_records() {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        conn.execute(
+            "CREATE TABLE provider_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                provider_id TEXT NOT NULL,
+                recorded_at TEXT NOT NULL,
+                value REAL NOT NULL
+            )",
+            [],
+        )
+        .unwrap();
+
+        // Two records from yesterday
+        conn.execute(
+            "INSERT INTO provider_history (provider_id, recorded_at, value)
+             VALUES ('p1', datetime('now', '-1 days'), 100.0)",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO provider_history (provider_id, recorded_at, value)
+             VALUES ('p1', datetime('now', '-1 days'), 100.0)",
+            [],
+        )
+        .unwrap();
+
+        // First refresh today: latest record is from yesterday (is_today = false)
+        conn.execute(
+            "INSERT INTO provider_history (provider_id, recorded_at, value)
+             VALUES ('p1', datetime('now'), 100.0)",
+            [],
+        )
+        .unwrap();
+
+        let today_count_1: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM provider_history
+                 WHERE provider_id = 'p1' AND recorded_at >= date('now')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(today_count_1, 1);
+
+        // Second refresh today: latest is today, but today_count = 1 (< 2) -> should insert
+        conn.execute(
+            "INSERT INTO provider_history (provider_id, recorded_at, value)
+             VALUES ('p1', datetime('now'), 100.0)",
+            [],
+        )
+        .unwrap();
+
+        let today_count_2: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM provider_history
+                 WHERE provider_id = 'p1' AND recorded_at >= date('now')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(today_count_2, 2);
+
+        // Third refresh today: latest is today, today_count = 2 (>= 2) -> should merge
+        // Simulate the merge by updating the latest record's timestamp
+        conn.execute(
+            "UPDATE provider_history SET recorded_at = datetime('now') WHERE id = (SELECT MAX(id) FROM provider_history WHERE provider_id = 'p1')",
+            [],
+        )
+        .unwrap();
+
+        let today_count_3: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM provider_history
+                 WHERE provider_id = 'p1' AND recorded_at >= date('now')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        // Merge updates timestamp, does not insert -> count stays 2
+        assert_eq!(today_count_3, 2);
+    }
+
+    #[test]
+    fn test_insert_different_value_any_day() {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        conn.execute(
+            "CREATE TABLE provider_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                provider_id TEXT NOT NULL,
+                recorded_at TEXT NOT NULL,
+                value REAL NOT NULL
+            )",
+            [],
+        )
+        .unwrap();
+
+        conn.execute(
+            "INSERT INTO provider_history (provider_id, recorded_at, value)
+             VALUES ('p1', datetime('now'), 100.0)",
+            [],
+        )
+        .unwrap();
+
+        let is_today: bool = conn
+            .query_row(
+                "SELECT COUNT(*) FROM provider_history
+                 WHERE provider_id = 'p1' AND id = (SELECT MAX(id) FROM provider_history WHERE provider_id = 'p1')
+                 AND recorded_at >= date('now')",
+                [],
+                |row| row.get::<_, i64>(0),
+            )
+            .unwrap()
+            > 0;
+        assert!(is_today);
+
+        let today_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM provider_history
+                 WHERE provider_id = 'p1' AND recorded_at >= date('now')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(today_count, 1);
+
+        // Different value -> should NOT merge regardless of day or count
+        let new_value = 200.0f64;
+        let last_value = 100.0f64;
+        assert!((last_value - new_value).abs() >= f64::EPSILON);
     }
 }

@@ -35,7 +35,10 @@ pub async fn fetch_provider(
         error_message: None,
     };
 
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .unwrap_or_else(|_| reqwest::Client::new());
     let url = &config.api.url;
 
     let mut headers = config.api.headers.clone();

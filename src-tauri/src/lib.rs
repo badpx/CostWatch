@@ -185,7 +185,13 @@ pub fn run() {
                     }
 
                     let state = app_handle.state::<AppState>();
-                    let _ = crate::commands::refresh_all_internal(&state).await;
+                    // Cap the entire refresh cycle at 60 s so a slow/dead provider
+                    // cannot stall the periodic timer indefinitely.
+                    let _ = tokio::time::timeout(
+                        std::time::Duration::from_secs(60),
+                        crate::commands::refresh_all_internal(&state),
+                    )
+                    .await;
                     let _ = app_handle.emit("providers-updated", ());
                 }
             });
