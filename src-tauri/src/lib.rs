@@ -6,7 +6,7 @@ mod tray;
 
 use provider::plugin;
 use provider::registry::ProviderRegistry;
-use provider::types::{Currency, ProviderIcon, ProviderState, ProviderStatus};
+use provider::types::{ProviderIcon, ProviderState, ProviderStatus};
 use state::AppState;
 use tauri::ActivationPolicy;
 use tauri::Emitter;

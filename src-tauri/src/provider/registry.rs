@@ -20,6 +20,7 @@ impl ProviderRegistry {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub fn get(&self, id: &str) -> Option<&ProviderConfig> {
         self.configs.get(id)
     }
@@ -28,6 +29,7 @@ impl ProviderRegistry {
         &self.configs
     }
 
+    #[allow(dead_code)]
     pub fn remove(&mut self, id: &str) -> Result<ProviderConfig, String> {
         self.configs
             .remove(id)

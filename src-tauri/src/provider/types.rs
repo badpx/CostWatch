@@ -62,6 +62,7 @@ pub enum Currency {
 }
 
 impl Currency {
+    #[allow(dead_code)]
     pub fn symbol(&self) -> &str {
         match self {
             Currency::USD => "$",

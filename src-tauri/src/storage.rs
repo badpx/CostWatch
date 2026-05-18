@@ -78,11 +78,6 @@ pub fn load_tokens() -> Result<TokenStore, String> {
     load_tokens_inner()
 }
 
-pub fn save_tokens(store: &TokenStore) -> Result<(), String> {
-    let _guard = TOKEN_FILE_LOCK.lock().unwrap();
-    save_tokens_inner(store)
-}
-
 pub fn get_token(provider_id: &str) -> Result<Option<String>, String> {
     let _guard = TOKEN_FILE_LOCK.lock().unwrap();
     let store = load_tokens_inner()?;
