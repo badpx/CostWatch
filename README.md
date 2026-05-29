@@ -4,6 +4,14 @@ macOS menu bar app for monitoring LLM API usage and balance. Click the tray icon
 
 Built-in support for **OpenRouter**, **DeepSeek**, **DeepInfra**, **Runware**, and **Kimi (Moonshot)**. Additional providers can be added via declarative YAML plugins.
 
+**Taskbar Menu**:
+
+<img width="308" height="350" alt="image" src="https://github.com/user-attachments/assets/fdcc0fcf-1659-4bfe-9eca-1881cc1432b1" />
+
+**Main Window**:
+
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/ae5ec815-48a9-4334-9b8f-b118285b12dd" />
+
 ## Tech Stack
 
 - **Backend**: Rust (Tauri v2)
